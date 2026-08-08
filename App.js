@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   SafeAreaView,
@@ -19,6 +20,14 @@ const money = (value) =>
     minimumFractionDigits: 2,
   }).format(value || 0);
 
+const formatCents = (value, maxDigits) => {
+  const digits = (value.replace(/\D/g, '').replace(/^0+(?=\d)/, '') || '0').slice(0, maxDigits);
+  const padded = digits.padStart(3, '0');
+  return `${padded.slice(0, -2)},${padded.slice(-2)}`;
+};
+
+const parseBrazilianNumber = (value) => Number.parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+
 export default function App() {
   const [amount, setAmount] = useState('186,40');
   const [people, setPeople] = useState(3);
@@ -30,7 +39,6 @@ export default function App() {
     const normalized = amount.replace(/\./g, '').replace(',', '.');
     return Number.parseFloat(normalized) || 0;
   }, [amount]);
-  const share = total / people;
 
   const changePeople = (nextPeople) => {
     const safePeople = Math.max(1, nextPeople);
@@ -44,7 +52,11 @@ export default function App() {
   if (screen === 'customize') {
     return (
       <CustomizeScreen
-        amount={total}
+        amount={amount}
+        setAmount={setAmount}
+        total={total}
+        people={people}
+        changePeople={changePeople}
         names={names}
         setNames={setNames}
         splitType={splitType}
@@ -68,70 +80,49 @@ export default function App() {
           </View>
 
           <View style={styles.intro}>
-            <Text style={styles.eyebrow}>NOVA DIVISÃO</Text>
-            <Text style={styles.title}>Quem divide,{"\n"}divide leve.</Text>
-            <Text style={styles.subtitle}>Adicione o valor e escolha quantas pessoas entram na conta.</Text>
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>VALOR TOTAL</Text>
-            <View style={styles.amountRow}>
-              <Text style={styles.currency}>R$</Text>
-              <TextInput
-                accessibilityLabel="Valor total da conta"
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="decimal-pad"
-                selectTextOnFocus
-                style={styles.amountInput}
-              />
-            </View>
-            <View style={styles.divider} />
-
-            <Text style={[styles.fieldLabel, styles.peopleLabel]}>PESSOAS</Text>
-            <View style={styles.stepper}>
-              <Pressable
-                accessibilityLabel="Remover pessoa"
-                onPress={() => changePeople(people - 1)}
-                style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}
-              ><Text style={styles.stepSymbol}>−</Text></Pressable>
-              <View style={styles.peopleCount}>
-                <Text style={styles.peopleNumber}>{people}</Text>
-                <Text style={styles.peopleWord}>{people === 1 ? 'pessoa' : 'pessoas'}</Text>
-              </View>
-              <Pressable
-                accessibilityLabel="Adicionar pessoa"
-                onPress={() => changePeople(people + 1)}
-                style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}
-              ><Text style={styles.stepSymbol}>+</Text></Pressable>
-            </View>
-          </View>
-
-          <View style={styles.result}>
-            <Text style={styles.resultLabel}>CADA PESSOA PAGA</Text>
-            <Text style={styles.resultValue}>{money(share)}</Text>
-            <Text style={styles.resultHint}>Divisão igual entre {people} {people === 1 ? 'pessoa' : 'pessoas'}</Text>
+            <Text style={styles.title}>Dividir as contas{`\n`}nunca foi tão fácil</Text>
           </View>
 
           <Pressable
             onPress={() => setScreen('customize')}
             style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryPressed]}
           >
-            <Text style={styles.primaryText}>Personalizar divisão</Text>
+            <Text style={styles.primaryText}>Fazer divisão de conta</Text>
             <Text style={styles.arrow}>→</Text>
           </Pressable>
-          <Text style={styles.footer}>Simples, justo e sem calculadora.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-function CustomizeScreen({ amount, names, setNames, splitType, setSplitType, onBack }) {
+function CustomizeScreen({ amount, setAmount, total, people, changePeople, names, setNames, splitType, setSplitType, onBack }) {
   const [details, setDetails] = useState(() => names.map(() => ''));
+  const [isSplitSelectOpen, setIsSplitSelectOpen] = useState(false);
   const equalPercentage = (100 / names.length).toFixed(names.length === 3 ? 2 : 1).replace('.', ',');
+  const splitOptions = [
+    ['equal', 'Divisão igual', 'Mesma parte para cada pessoa'],
+    ['percentage', 'Divisão percentual', 'Defina a porcentagem de cada pessoa'],
+    ['amount', 'Valores específicos', 'Defina o valor de cada pessoa'],
+  ];
+  const selectedSplit = splitOptions.find(([type]) => type === splitType);
+  const percentageTotal = details.reduce((sum, detail) => sum + (Number.parseInt(detail, 10) || 0), 0);
+  const specificAmountTotal = details.reduce((sum, detail) => sum + parseBrazilianNumber(detail), 0);
+  const validationMessage = splitType === 'percentage' && percentageTotal > 100
+    ? `A soma das porcentagens é ${percentageTotal}%. Ela não pode passar de 100%.`
+    : splitType === 'amount' && specificAmountTotal > total
+      ? `A soma dos valores (${money(specificAmountTotal)}) ultrapassa o total da conta (${money(total)}).`
+      : null;
   const updateName = (index, value) => setNames((current) => current.map((name, i) => i === index ? value : name));
-  const updateDetail = (index, value) => setDetails((current) => current.map((detail, i) => i === index ? value : detail));
+  const updateDetail = (index, value) => setDetails((current) => Array.from(
+    { length: names.length },
+    (_, i) => i === index ? value : current[i] || '',
+  ));
+  const selectSplitType = (type) => {
+    setSplitType(type);
+    setDetails(names.map(() => type === 'amount' ? '0,00' : ''));
+    setIsSplitSelectOpen(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -145,31 +136,62 @@ function CustomizeScreen({ amount, names, setNames, splitType, setSplitType, onB
         </View>
 
         <Text style={styles.eyebrow}>DETALHES DA CONTA</Text>
-        <Text style={styles.customTitle}>Como vocês vão{`\n`}dividir {money(amount)}?</Text>
+        <Text style={styles.customTitle}>Vamos acertar{`\n`}essa conta.</Text>
+
+        <View style={[styles.card, styles.detailsCard]}>
+          <Text style={styles.fieldLabel}>VALOR TOTAL</Text>
+          <View style={styles.amountRow}>
+            <Text style={styles.currency}>R$</Text>
+            <TextInput
+              accessibilityLabel="Valor total da conta"
+              value={amount}
+              onChangeText={(value) => setAmount(formatCents(value, 9))}
+              keyboardType="number-pad"
+              selectTextOnFocus
+              style={styles.amountInput}
+            />
+          </View>
+          <View style={styles.divider} />
+
+          <Text style={[styles.fieldLabel, styles.peopleLabel]}>PESSOAS</Text>
+          <View style={styles.stepper}>
+            <Pressable accessibilityLabel="Remover pessoa" onPress={() => changePeople(people - 1)} style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}><Text style={styles.stepSymbol}>−</Text></Pressable>
+            <View style={styles.peopleCount}>
+              <Text style={styles.peopleNumber}>{people}</Text>
+              <Text style={styles.peopleWord}>{people === 1 ? 'pessoa' : 'pessoas'}</Text>
+            </View>
+            <Pressable accessibilityLabel="Adicionar pessoa" onPress={() => changePeople(people + 1)} style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}><Text style={styles.stepSymbol}>+</Text></Pressable>
+          </View>
+          {splitType === 'equal' && (
+            <View style={styles.detailResult}>
+              <Text style={styles.resultLabel}>CADA PESSOA PAGA</Text>
+              <Text style={styles.detailResultValue}>{money(total / people)}</Text>
+            </View>
+          )}
+        </View>
 
         <Text style={[styles.fieldLabel, styles.sectionLabel]}>TIPO DE DIVISÃO</Text>
-        <View style={styles.splitOptions}>
-          {[
-            ['equal', 'Igual', 'Mesma parte'],
-            ['percentage', 'Percentual', 'Por porcentagem'],
-            ['amount', 'Valores', 'Por pessoa'],
-          ].map(([type, label, caption]) => (
-            <Pressable key={type} onPress={() => setSplitType(type)} style={[styles.option, splitType === type && styles.optionActive]}>
-              <View style={[styles.radio, splitType === type && styles.radioActive]}>{splitType === type && <View style={styles.radioDot} />}</View>
-              <View><Text style={[styles.optionTitle, splitType === type && styles.optionTitleActive]}>{label}</Text><Text style={styles.optionCaption}>{caption}</Text></View>
-            </Pressable>
-          ))}
-        </View>
+        <Pressable onPress={() => setIsSplitSelectOpen(true)} style={styles.selectControl} accessibilityLabel="Selecionar tipo de divisão">
+          <View><Text style={styles.selectValue}>{selectedSplit[1]}</Text><Text style={styles.selectCaption}>{selectedSplit[2]}</Text></View>
+          <Text style={styles.selectChevron}>⌄</Text>
+        </Pressable>
 
         <Text style={[styles.fieldLabel, styles.peopleSectionLabel]}>QUEM PARTICIPA</Text>
         <View style={styles.participants}>
           {names.map((name, index) => (
             <View key={index} style={styles.participantRow}>
-              <View style={styles.avatar}><Text style={styles.avatarText}>{(name.trim()[0] || index + 1).toUpperCase()}</Text></View>
+              <View style={styles.avatar}><Text style={styles.avatarText}>{String(name.trim()[0] || index + 1).toUpperCase()}</Text></View>
               <TextInput value={name} onChangeText={(value) => updateName(index, value)} placeholder={`Pessoa ${index + 1}`} placeholderTextColor="#9BA7A2" style={styles.nameInput} />
-              {splitType === 'equal' ? <Text style={styles.equalShare}>{money(amount / names.length)}</Text> : (
+              {splitType === 'equal' ? <Text style={styles.equalShare}>{money(total / names.length)}</Text> : (
                 <View style={styles.detailInputWrap}>
-                  <TextInput value={details[index]} onChangeText={(value) => updateDetail(index, value)} placeholder={splitType === 'percentage' ? equalPercentage : '0,00'} keyboardType="decimal-pad" placeholderTextColor="#7A8983" style={styles.detailInput} />
+                  <TextInput
+                    value={details[index] || (splitType === 'amount' ? '0,00' : '')}
+                    onChangeText={(value) => updateDetail(index, splitType === 'amount' ? formatCents(value) : value.replace(/\D/g, ''))}
+                    placeholder={splitType === 'percentage' ? equalPercentage : '0,00'}
+                    keyboardType="number-pad"
+                    placeholderTextColor="#7A8983"
+                    style={styles.detailInput}
+                  />
                   <Text style={styles.detailSuffix}>{splitType === 'percentage' ? '%' : 'R$'}</Text>
                 </View>
               )}
@@ -177,9 +199,26 @@ function CustomizeScreen({ amount, names, setNames, splitType, setSplitType, onB
           ))}
         </View>
 
-        <Pressable onPress={onBack} style={({ pressed }) => [styles.primaryButton, styles.doneButton, pressed && styles.primaryPressed]}>
-          <Text style={styles.primaryText}>Salvar personalização</Text><Text style={styles.arrow}>✓</Text>
-        </Pressable>
+        {validationMessage && (
+          <View style={styles.validationError}>
+            <Text style={styles.validationErrorIcon}>!</Text>
+            <Text style={styles.validationErrorText}>{validationMessage}</Text>
+          </View>
+        )}
+
+        <Modal transparent visible={isSplitSelectOpen} animationType="fade" onRequestClose={() => setIsSplitSelectOpen(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setIsSplitSelectOpen(false)}>
+            <Pressable style={styles.selectModal} onPress={() => {}}>
+              <Text style={styles.modalTitle}>Tipo de divisão</Text>
+              {splitOptions.map(([type, label, caption]) => (
+                <Pressable key={type} onPress={() => selectSplitType(type)} style={styles.selectOption}>
+                  <View><Text style={styles.selectOptionTitle}>{label}</Text><Text style={styles.selectOptionCaption}>{caption}</Text></View>
+                  {splitType === type && <Text style={styles.selectedCheck}>✓</Text>}
+                </Pressable>
+              ))}
+            </Pressable>
+          </Pressable>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -196,6 +235,7 @@ const styles = StyleSheet.create({
   title: { color: '#1E3D35', fontSize: 42, lineHeight: 45, fontWeight: '800', letterSpacing: -1.8, marginTop: 10 },
   subtitle: { color: '#64736D', fontSize: 16, lineHeight: 23, marginTop: 14, maxWidth: 310 },
   card: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, shadowColor: '#1E3D35', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 20, elevation: 2 },
+  detailsCard: { marginBottom: 28 },
   fieldLabel: { color: '#75847F', fontSize: 11, fontWeight: '800', letterSpacing: 1.2 },
   amountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 10 }, currency: { color: '#1E3D35', fontSize: 22, fontWeight: '700', marginRight: 8 },
   amountInput: { color: '#1E3D35', flex: 1, fontSize: 32, lineHeight: 40, fontWeight: '800', padding: 0, letterSpacing: -1 },
@@ -206,21 +246,22 @@ const styles = StyleSheet.create({
   peopleNumber: { color: '#1E3D35', fontSize: 21, fontWeight: '800', lineHeight: 24 }, peopleWord: { color: '#75847F', fontSize: 11, marginTop: 1 },
   result: { alignItems: 'center', paddingVertical: 31 }, resultLabel: { color: '#75847F', fontSize: 11, letterSpacing: 1.2, fontWeight: '800' },
   resultValue: { color: '#1E3D35', fontSize: 40, lineHeight: 48, fontWeight: '800', letterSpacing: -1.8, marginTop: 6 }, resultHint: { color: '#71807A', fontSize: 14, marginTop: 4 },
+  detailResult: { alignItems: 'center', paddingTop: 24 }, detailResultValue: { color: '#1E3D35', fontSize: 30, lineHeight: 36, fontWeight: '800', letterSpacing: -1.2, marginTop: 3 },
   primaryButton: { height: 60, backgroundColor: '#1E3D35', borderRadius: 18, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, primaryPressed: { backgroundColor: '#31564B' },
   primaryText: { color: '#F3F78D', fontSize: 16, fontWeight: '800' }, arrow: { color: '#F3F78D', fontSize: 25, fontWeight: '400' },
-  footer: { color: '#8B9792', fontSize: 13, textAlign: 'center', marginTop: 22 },
   customContent: { paddingBottom: 32 },
   backButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E9EEEA', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   backArrow: { color: '#1E3D35', fontSize: 34, fontWeight: '300', lineHeight: 32, marginTop: -3 },
   customHeader: { color: '#1E3D35', fontSize: 17, fontWeight: '800', letterSpacing: -0.4 },
   customTitle: { color: '#1E3D35', fontSize: 31, lineHeight: 36, fontWeight: '800', letterSpacing: -1.2, marginTop: 9, marginBottom: 28 },
   sectionLabel: { marginBottom: 11 },
-  splitOptions: { gap: 9 },
-  option: { minHeight: 67, borderWidth: 1, borderColor: '#E2E7E3', borderRadius: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF' },
-  optionActive: { borderColor: '#1E3D35', backgroundColor: '#F5F8DE' },
-  radio: { height: 19, width: 19, borderRadius: 10, borderWidth: 1.5, borderColor: '#97A49F', alignItems: 'center', justifyContent: 'center', marginRight: 13 },
-  radioActive: { borderColor: '#1E3D35' }, radioDot: { height: 9, width: 9, borderRadius: 5, backgroundColor: '#1E3D35' },
-  optionTitle: { color: '#334A42', fontSize: 15, fontWeight: '800' }, optionTitleActive: { color: '#1E3D35' }, optionCaption: { color: '#71807A', fontSize: 12, marginTop: 2 },
+  selectControl: { minHeight: 68, borderWidth: 1, borderColor: '#DDE4DE', borderRadius: 16, paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' },
+  selectValue: { color: '#1E3D35', fontSize: 15, fontWeight: '800' }, selectCaption: { color: '#71807A', fontSize: 12, marginTop: 3 }, selectChevron: { color: '#1E3D35', fontSize: 27, lineHeight: 25, marginBottom: 7 },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(20, 38, 32, 0.35)' },
+  selectModal: { backgroundColor: '#F7F7F3', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 38 },
+  modalTitle: { color: '#1E3D35', fontSize: 20, fontWeight: '800', letterSpacing: -0.5, marginBottom: 12 },
+  selectOption: { minHeight: 67, borderBottomWidth: 1, borderBottomColor: '#E4E9E5', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  selectOptionTitle: { color: '#1E3D35', fontSize: 15, fontWeight: '800' }, selectOptionCaption: { color: '#71807A', fontSize: 12, marginTop: 3 }, selectedCheck: { color: '#1E3D35', fontSize: 20, fontWeight: '800' },
   peopleSectionLabel: { marginTop: 28, marginBottom: 11 },
   participants: { backgroundColor: '#FFFFFF', borderRadius: 20, paddingHorizontal: 16 },
   participantRow: { minHeight: 69, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#EDF0ED' },
@@ -228,5 +269,6 @@ const styles = StyleSheet.create({
   nameInput: { flex: 1, color: '#1E3D35', fontSize: 15, fontWeight: '600', paddingVertical: 12 }, equalShare: { color: '#1E3D35', fontSize: 13, fontWeight: '800' },
   detailInputWrap: { height: 37, width: 78, borderRadius: 10, backgroundColor: '#F1F4F0', flexDirection: 'row', alignItems: 'center', paddingLeft: 8 },
   detailInput: { color: '#1E3D35', fontSize: 13, fontWeight: '700', flex: 1, padding: 0 }, detailSuffix: { color: '#71807A', fontSize: 11, fontWeight: '800', paddingHorizontal: 7 },
-  doneButton: { marginTop: 26 },
+  validationError: { marginTop: 13, borderRadius: 13, backgroundColor: '#FDE8E4', paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start' },
+  validationErrorIcon: { color: '#A83E32', fontSize: 14, fontWeight: '900', marginRight: 8, marginTop: 1 }, validationErrorText: { color: '#8C352C', fontSize: 13, lineHeight: 18, fontWeight: '600', flex: 1 },
 });
