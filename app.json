@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Divide Certo",
+    "slug": "divide-certo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F7F3"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F7F3"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {}
+  }
+}
