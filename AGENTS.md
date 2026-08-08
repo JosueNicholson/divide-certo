@@ -3,8 +3,17 @@
 ## Projeto
 
 - Aplicativo mobile em React Native com Expo.
-- A interface e todo texto voltado ao usuário devem estar em português do Brasil (`pt-BR`).
-- O projeto usa um único ponto de entrada em `App.js`; mantenha a estrutura simples até que a complexidade justifique navegação ou novos módulos.
+- A interface está disponível em português do Brasil (`pt-BR`), inglês, espanhol e francês. Todo novo texto voltado ao usuário deve ser incluído nos quatro idiomas.
+
+## Arquitetura
+
+- `App.js` é o ponto de entrada e concentra apenas o estado compartilhado da divisão, o idioma selecionado e a troca simples entre telas.
+- `src/screens/` contém as telas: `HomeScreen`, `CustomizeScreen` e `SettingsScreen`.
+- `src/components/` contém componentes reutilizáveis, como `SplitTypeModal`.
+- `src/i18n/` centraliza a localização: um arquivo por idioma (`pt.js`, `en.js`, `es.js` e `fr.js`), além da configuração comum em `index.js` e `languages.js`.
+- `src/utils/` contém regras de formatação reutilizáveis, como moeda e máscara de centavos.
+- Preserve essa separação: não mova traduções, componentes de tela ou utilitários de volta para `App.js`. Ao adicionar uma tela, componente ou idioma, crie o módulo correspondente.
+- A navegação continua controlada por estado enquanto houver poucas telas; só adicione uma biblioteca de navegação quando o fluxo justificar.
 
 ## Interface
 

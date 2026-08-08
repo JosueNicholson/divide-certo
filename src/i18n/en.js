@@ -1,0 +1,6 @@
+export default {
+  homeTitle: 'Splitting bills{line}has never been easier', start: 'Split a bill', settings: 'Settings',
+  customize: 'Customize split', billDetails: 'BILL DETAILS', customizeTitle: "Let's settle{line}this bill.", totalAmount: 'TOTAL AMOUNT', people: 'PEOPLE', person: 'person', peoplePlural: 'people', eachPays: 'EACH PERSON PAYS', splitType: 'SPLIT TYPE', participants: 'PARTICIPANTS',
+  equal: 'Equal split', equalCaption: 'The same share for each person', percentage: 'Percentage split', percentageCaption: 'Set each person’s percentage', amount: 'Specific amounts', amountCaption: 'Set each person’s amount', splitTypeTitle: 'Split type',
+  percentageOver: (value) => `The percentages add up to ${value}%. They cannot exceed 100%.`, amountOver: (value, total) => `The amounts (${value}) exceed the bill total (${total}).`, percentageMissing: (value) => `${value}% is missing to complete 100%.`, amountMissing: (value, total) => `${value} is missing to complete the total of ${total}.`, personPlaceholder: (index) => `Person ${index}`, back: 'Back', totalAccessibility: 'Bill total amount', removePerson: 'Remove person', addPerson: 'Add person', selectSplit: 'Select split type', language: 'Language', languageDescription: 'Choose the app language', appSettings: 'Settings', languageSystem: 'The initial language follows your operating system.',
+};
