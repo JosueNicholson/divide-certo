@@ -35,10 +35,12 @@ export default function App() {
   const changePeople = (nextPeople) => {
     const safePeople = Math.max(1, nextPeople);
     setPeople(safePeople);
-    setNames((currentNames) => Array.from(
-      { length: safePeople },
-      (_, index) => currentNames[index] || t.personPlaceholder(index + 1),
-    ));
+    setNames((currentNames) =>
+      Array.from(
+        { length: safePeople },
+        (_, index) => currentNames[index] || t.personPlaceholder(index + 1),
+      ),
+    );
   };
 
   if (screen === 'customize') {
@@ -61,8 +63,21 @@ export default function App() {
   }
 
   if (screen === 'settings') {
-    return <SettingsScreen language={language} setLanguage={changeLanguage} t={t} onBack={() => setScreen('home')} />;
+    return (
+      <SettingsScreen
+        language={language}
+        setLanguage={changeLanguage}
+        t={t}
+        onBack={() => setScreen('home')}
+      />
+    );
   }
 
-  return <HomeScreen t={t} onStart={() => setScreen('customize')} onOpenSettings={() => setScreen('settings')} />;
+  return (
+    <HomeScreen
+      t={t}
+      onStart={() => setScreen('customize')}
+      onOpenSettings={() => setScreen('settings')}
+    />
+  );
 }

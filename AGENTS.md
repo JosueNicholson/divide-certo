@@ -21,6 +21,14 @@
 - Priorize uma experiência mobile e controles acessíveis, com `accessibilityLabel` em ações importantes.
 - Evite adicionar bibliotecas de interface ou navegação sem necessidade explícita.
 
+## Estilos com NativeWind
+
+- O projeto usa Tailwind CSS através do NativeWind. Prefira `className` com utilitários Tailwind nos componentes React Native em vez de criar novos objetos com `StyleSheet`.
+- Mantenha os caminhos de conteúdo e o preset `nativewind/preset` em `tailwind.config.js`; ao adicionar arquivos que contenham classes, inclua-os no `content` para que sejam compilados.
+- Preserve a integração atual: `global.css` é importado por `App.js`, o Babel usa `nativewind/babel` e o Metro é envolvido por `withNativeWind`.
+- Para cores, espaçamentos e estilos recorrentes, prefira tokens definidos no tema Tailwind; use valores arbitrários somente quando forem específicos ao layout.
+- Classes condicionais devem continuar legíveis; quando a lógica crescer, componha a string em uma variável antes do JSX.
+
 ## Regras de negócio da divisão
 
 - O valor total aceita apenas números, usa máscara de centavos e não pode ultrapassar `9.999.999,99`.
@@ -32,4 +40,7 @@
 ## Qualidade
 
 - Após editar `App.js`, execute `node --check App.js` e `git diff --check`.
+- Use ESLint para identificar erros e padrões incorretos no JavaScript/React Native. Antes de concluir alterações de código, execute `npm run lint` e corrija os problemas introduzidos pela alteração.
+- Use Prettier como fonte única de formatação. Antes de concluir alterações de código, execute `npm run format:check`; para aplicar formatação no repositório, use `npm run format`.
+- Não desative regras de ESLint ou formatação pontualmente sem uma justificativa técnica clara; prefira corrigir a causa e mantenha as configurações em arquivos próprios na raiz do projeto.
 - Não sobrescreva nem reverta alterações do usuário que não façam parte da solicitação atual.

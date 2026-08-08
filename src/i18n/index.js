@@ -14,4 +14,5 @@ export const getSystemLanguage = () => {
   return translations[systemLanguage] ? systemLanguage : 'pt';
 };
 
-export const getLocale = (language) => languages.find(({ code }) => code === language)?.locale || 'pt-BR';
+export const getLocale = (language) =>
+  languages.find(({ code }) => code === language)?.locale || 'pt-BR';

@@ -4,4 +4,5 @@ export const formatCents = (value, maxDigits) => {
   return `${padded.slice(0, -2)},${padded.slice(-2)}`;
 };
 
-export const parseBrazilianNumber = (value) => Number.parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+export const parseBrazilianNumber = (value) =>
+  Number.parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
