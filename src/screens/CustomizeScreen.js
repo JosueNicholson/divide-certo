@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
 import SplitTypeModal from '../components/SplitTypeModal';
 import { money } from '../utils/currency';
 import { formatCents, parseBrazilianNumber } from '../utils/formatters';
@@ -31,48 +31,38 @@ export default function CustomizeScreen({ amount, setAmount, total, people, chan
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-brand-background">
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}><Pressable onPress={onBack} accessibilityLabel={t.back} style={styles.backButton}><Text style={styles.backArrow}>‹</Text></Pressable><Text style={styles.headerTitle}>{t.customize}</Text></View>
-        <Text style={styles.eyebrow}>{t.billDetails}</Text><Text style={styles.title}>{t.customizeTitle.replace('{line}', '\n')}</Text>
-        <View style={[styles.card, styles.detailsCard]}>
-          <Text style={styles.fieldLabel}>{t.totalAmount}</Text>
-          <View style={styles.amountRow}><Text style={styles.currency}>R$</Text><TextInput accessibilityLabel={t.totalAccessibility} value={amount} onChangeText={(value) => setAmount(formatCents(value, 9))} keyboardType="number-pad" selectTextOnFocus style={styles.amountInput} /></View>
-          <View style={styles.divider} />
-          <Text style={[styles.fieldLabel, styles.peopleLabel]}>{t.people}</Text>
-          <View style={styles.stepper}>
-            <Pressable accessibilityLabel={t.removePerson} onPress={() => changePeople(people - 1)} style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}><Text style={styles.stepSymbol}>−</Text></Pressable>
-            <View style={styles.peopleCount}><Text style={styles.peopleNumber}>{people}</Text><Text style={styles.peopleWord}>{people === 1 ? t.person : t.peoplePlural}</Text></View>
-            <Pressable accessibilityLabel={t.addPerson} onPress={() => changePeople(people + 1)} style={({ pressed }) => [styles.stepButton, pressed && styles.pressed]}><Text style={styles.stepSymbol}>+</Text></Pressable>
+      <ScrollView contentContainerClassName="flex-grow px-6 pb-8" keyboardShouldPersistTaps="handled">
+        <View className="h-[72px] flex-row items-center"><Pressable onPress={onBack} accessibilityLabel={t.back} className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-[#E9EEEA]"><Text className="-mt-[3px] text-[34px] font-light leading-8 text-[#1E3D35]">‹</Text></Pressable><Text className="text-[17px] font-extrabold tracking-[-0.4px] text-[#1E3D35]">{t.customize}</Text></View>
+        <Text className="text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">{t.billDetails}</Text><Text className="mb-7 mt-[9px] text-[31px] font-extrabold leading-9 tracking-[-1.2px] text-[#1E3D35]">{t.customizeTitle.replace('{line}', '\n')}</Text>
+        <View className="mb-7 rounded-3xl bg-white p-6 shadow-lg shadow-[#1E3D35]/10 elevation-2">
+          <Text className="text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">{t.totalAmount}</Text>
+          <View className="mt-2.5 flex-row items-baseline"><Text className="mr-2 text-[22px] font-bold text-[#1E3D35]">R$</Text><TextInput accessibilityLabel={t.totalAccessibility} value={amount} onChangeText={(value) => setAmount(formatCents(value, 9))} keyboardType="number-pad" selectTextOnFocus className="flex-1 p-0 text-[32px] font-extrabold leading-10 tracking-[-1px] text-[#1E3D35]" /></View>
+          <View className="mt-[22px] h-px bg-[#E8ECE9]" />
+          <Text className="mt-[22px] text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">{t.people}</Text>
+          <View className="mt-[11px] h-[62px] flex-row items-center justify-between rounded-2xl bg-[#F3F5F1] px-[7px]">
+            <Pressable accessibilityLabel={t.removePerson} onPress={() => changePeople(people - 1)} className={({ pressed }) => `h-12 w-12 items-center justify-center rounded-[13px] bg-white ${pressed ? 'opacity-[0.55]' : ''}`}><Text className="text-[27px] font-medium leading-[30px] text-[#1E3D35]">−</Text></Pressable>
+            <View className="items-center"><Text className="text-[21px] font-extrabold leading-6 text-[#1E3D35]">{people}</Text><Text className="mt-px text-[11px] text-[#75847F]">{people === 1 ? t.person : t.peoplePlural}</Text></View>
+            <Pressable accessibilityLabel={t.addPerson} onPress={() => changePeople(people + 1)} className={({ pressed }) => `h-12 w-12 items-center justify-center rounded-[13px] bg-white ${pressed ? 'opacity-[0.55]' : ''}`}><Text className="text-[27px] font-medium leading-[30px] text-[#1E3D35]">+</Text></Pressable>
           </View>
-          {splitType === 'equal' && <View style={styles.detailResult}><Text style={styles.resultLabel}>{t.eachPays}</Text><Text style={styles.detailResultValue}>{money(total / people, locale)}</Text></View>}
+          {splitType === 'equal' && <View className="items-center pt-6"><Text className="text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">{t.eachPays}</Text><Text className="mt-[3px] text-[30px] font-extrabold leading-9 tracking-[-1.2px] text-[#1E3D35]">{money(total / people, locale)}</Text></View>}
         </View>
-        <Text style={[styles.fieldLabel, styles.sectionLabel]}>{t.splitType}</Text>
-        <Pressable onPress={() => setIsSplitSelectOpen(true)} style={styles.selectControl} accessibilityLabel={t.selectSplit}><View><Text style={styles.selectValue}>{selectedSplit[1]}</Text><Text style={styles.selectCaption}>{selectedSplit[2]}</Text></View><Text style={styles.selectChevron}>⌄</Text></Pressable>
-        <Text style={[styles.fieldLabel, styles.peopleSectionLabel]}>{t.participants}</Text>
-        <View style={styles.participants}>
+        <Text className="mb-[11px] text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">{t.splitType}</Text>
+        <Pressable onPress={() => setIsSplitSelectOpen(true)} className="min-h-[68px] flex-row items-center justify-between rounded-2xl border border-[#DDE4DE] bg-white px-[17px]" accessibilityLabel={t.selectSplit}><View><Text className="text-[15px] font-extrabold text-[#1E3D35]">{selectedSplit[1]}</Text><Text className="mt-[3px] text-xs text-[#71807A]">{selectedSplit[2]}</Text></View><Text className="mb-[7px] text-[27px] leading-[25px] text-[#1E3D35]">⌄</Text></Pressable>
+        <Text className="mb-[11px] mt-7 text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">{t.participants}</Text>
+        <View className="rounded-[20px] bg-white px-4">
           {names.map((name, index) => (
-            <View key={index} style={styles.participantRow}>
-              <View style={styles.avatar}><Text style={styles.avatarText}>{String(name.trim()[0] || index + 1).toUpperCase()}</Text></View>
-              <View style={styles.participantInfo}>
-                <TextInput value={name} onChangeText={(value) => updateName(index, value)} placeholder={t.personPlaceholder(index + 1)} placeholderTextColor="#9BA7A2" style={styles.nameInput} />
-                {splitType === 'percentage' && <Text style={styles.percentageAmount}>{money((Number.parseInt(details[index], 10) || 0) * total / 100, locale)}</Text>}
-              </View>
-              {splitType === 'equal' ? <Text style={styles.equalShare}>{money(total / names.length, locale)}</Text> : <View style={styles.detailInputWrap}><TextInput value={details[index] || (splitType === 'amount' ? '0,00' : '')} onChangeText={(value) => updateDetail(index, splitType === 'amount' ? formatCents(value) : value.replace(/\D/g, ''))} placeholder={splitType === 'percentage' ? equalPercentage : '0,00'} keyboardType="number-pad" placeholderTextColor="#7A8983" style={styles.detailInput} /><Text style={styles.detailSuffix}>{splitType === 'percentage' ? '%' : 'R$'}</Text></View>}
+            <View key={index} className="min-h-[69px] flex-row items-center border-b border-[#EDF0ED]">
+              <View className="mr-[11px] h-[35px] w-[35px] items-center justify-center rounded-full bg-[#DDE9D8]"><Text className="text-sm font-extrabold text-[#31564B]">{String(name.trim()[0] || index + 1).toUpperCase()}</Text></View>
+              <View className="flex-1 py-2"><TextInput value={name} onChangeText={(value) => updateName(index, value)} placeholder={t.personPlaceholder(index + 1)} placeholderTextColor="#9BA7A2" className="py-0.5 text-[15px] font-semibold text-[#1E3D35]" />{splitType === 'percentage' && <Text className="mt-0.5 text-xs font-semibold text-[#71807A]">{money((Number.parseInt(details[index], 10) || 0) * total / 100, locale)}</Text>}</View>
+              {splitType === 'equal' ? <Text className="text-[13px] font-extrabold text-[#1E3D35]">{money(total / names.length, locale)}</Text> : <View className="h-[37px] w-[78px] flex-row items-center rounded-[10px] bg-[#F1F4F0] pl-2"><TextInput value={details[index] || (splitType === 'amount' ? '0,00' : '')} onChangeText={(value) => updateDetail(index, splitType === 'amount' ? formatCents(value) : value.replace(/\D/g, ''))} placeholder={splitType === 'percentage' ? equalPercentage : '0,00'} keyboardType="number-pad" placeholderTextColor="#7A8983" className="flex-1 p-0 text-[13px] font-bold text-[#1E3D35]" /><Text className="px-[7px] text-[11px] font-extrabold text-[#71807A]">{splitType === 'percentage' ? '%' : 'R$'}</Text></View>}
             </View>
           ))}
         </View>
-        {validation && <View style={validation.type === 'error' ? styles.validationError : styles.validationWarning}><Text style={validation.type === 'error' ? styles.validationErrorIcon : styles.validationWarningIcon}>!</Text><Text style={validation.type === 'error' ? styles.validationErrorText : styles.validationWarningText}>{validation.message}</Text></View>}
+        {validation && <View className={validation.type === 'error' ? 'mt-[13px] flex-row items-start rounded-[13px] bg-[#FDE8E4] px-[14px] py-3' : 'mt-[13px] flex-row items-start rounded-[13px] bg-[#FFF4CF] px-[14px] py-3'}><Text className={validation.type === 'error' ? 'mr-2 mt-px text-sm font-black text-[#A83E32]' : 'mr-2 mt-px text-sm font-black text-[#8A6500]'}>!</Text><Text className={validation.type === 'error' ? 'flex-1 text-[13px] font-semibold leading-[18px] text-[#8C352C]' : 'flex-1 text-[13px] font-semibold leading-[18px] text-[#715300]'}>{validation.message}</Text></View>}
         <SplitTypeModal visible={isSplitSelectOpen} onClose={() => setIsSplitSelectOpen(false)} options={splitOptions} selectedType={splitType} onSelect={selectSplitType} title={t.splitTypeTitle} />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F7F7F3' }, content: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 32 }, header: { height: 72, flexDirection: 'row', alignItems: 'center' }, backButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E9EEEA', alignItems: 'center', justifyContent: 'center', marginRight: 12 }, backArrow: { color: '#1E3D35', fontSize: 34, fontWeight: '300', lineHeight: 32, marginTop: -3 }, headerTitle: { color: '#1E3D35', fontSize: 17, fontWeight: '800', letterSpacing: -0.4 }, eyebrow: { color: '#6C817A', fontSize: 11, fontWeight: '800', letterSpacing: 1.4 }, title: { color: '#1E3D35', fontSize: 31, lineHeight: 36, fontWeight: '800', letterSpacing: -1.2, marginTop: 9, marginBottom: 28 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, shadowColor: '#1E3D35', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 20, elevation: 2 }, detailsCard: { marginBottom: 28 }, fieldLabel: { color: '#75847F', fontSize: 11, fontWeight: '800', letterSpacing: 1.2 }, amountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 10 }, currency: { color: '#1E3D35', fontSize: 22, fontWeight: '700', marginRight: 8 }, amountInput: { color: '#1E3D35', flex: 1, fontSize: 32, lineHeight: 40, fontWeight: '800', padding: 0, letterSpacing: -1 }, divider: { height: 1, backgroundColor: '#E8ECE9', marginTop: 22 }, peopleLabel: { marginTop: 22 }, stepper: { height: 62, backgroundColor: '#F3F5F1', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 11, paddingHorizontal: 7 }, stepButton: { width: 48, height: 48, borderRadius: 13, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }, pressed: { opacity: 0.55 }, stepSymbol: { color: '#1E3D35', fontSize: 27, lineHeight: 30, fontWeight: '500' }, peopleCount: { alignItems: 'center' }, peopleNumber: { color: '#1E3D35', fontSize: 21, fontWeight: '800', lineHeight: 24 }, peopleWord: { color: '#75847F', fontSize: 11, marginTop: 1 }, detailResult: { alignItems: 'center', paddingTop: 24 }, resultLabel: { color: '#75847F', fontSize: 11, letterSpacing: 1.2, fontWeight: '800' }, detailResultValue: { color: '#1E3D35', fontSize: 30, lineHeight: 36, fontWeight: '800', letterSpacing: -1.2, marginTop: 3 },
-  sectionLabel: { marginBottom: 11 }, selectControl: { minHeight: 68, borderWidth: 1, borderColor: '#DDE4DE', borderRadius: 16, paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' }, selectValue: { color: '#1E3D35', fontSize: 15, fontWeight: '800' }, selectCaption: { color: '#71807A', fontSize: 12, marginTop: 3 }, selectChevron: { color: '#1E3D35', fontSize: 27, lineHeight: 25, marginBottom: 7 }, peopleSectionLabel: { marginTop: 28, marginBottom: 11 }, participants: { backgroundColor: '#FFFFFF', borderRadius: 20, paddingHorizontal: 16 }, participantRow: { minHeight: 69, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#EDF0ED' }, avatar: { height: 35, width: 35, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDE9D8', marginRight: 11 }, avatarText: { color: '#31564B', fontSize: 14, fontWeight: '800' }, participantInfo: { flex: 1, paddingVertical: 8 }, nameInput: { color: '#1E3D35', fontSize: 15, fontWeight: '600', paddingVertical: 2 }, percentageAmount: { color: '#71807A', fontSize: 12, fontWeight: '600', marginTop: 2 }, equalShare: { color: '#1E3D35', fontSize: 13, fontWeight: '800' }, detailInputWrap: { height: 37, width: 78, borderRadius: 10, backgroundColor: '#F1F4F0', flexDirection: 'row', alignItems: 'center', paddingLeft: 8 }, detailInput: { color: '#1E3D35', fontSize: 13, fontWeight: '700', flex: 1, padding: 0 }, detailSuffix: { color: '#71807A', fontSize: 11, fontWeight: '800', paddingHorizontal: 7 },
-  validationError: { marginTop: 13, borderRadius: 13, backgroundColor: '#FDE8E4', paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start' }, validationErrorIcon: { color: '#A83E32', fontSize: 14, fontWeight: '900', marginRight: 8, marginTop: 1 }, validationErrorText: { color: '#8C352C', fontSize: 13, lineHeight: 18, fontWeight: '600', flex: 1 }, validationWarning: { marginTop: 13, borderRadius: 13, backgroundColor: '#FFF4CF', paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start' }, validationWarningIcon: { color: '#8A6500', fontSize: 14, fontWeight: '900', marginRight: 8, marginTop: 1 }, validationWarningText: { color: '#715300', fontSize: 13, lineHeight: 18, fontWeight: '600', flex: 1 },
-});

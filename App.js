@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useMemo, useState } from 'react';
+import './global.css';
 import { getSystemLanguage, getLocale, translations } from './src/i18n';
 import HomeScreen from './src/screens/HomeScreen';
 import CustomizeScreen from './src/screens/CustomizeScreen';

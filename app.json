@@ -18,6 +18,8 @@
       },
       "edgeToEdgeEnabled": true
     },
-    "web": {}
+    "web": {
+      "bundler": "metro"
+    }
   }
 }

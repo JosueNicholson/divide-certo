@@ -1,34 +1,29 @@
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { languages } from '../i18n';
 
 export default function SettingsScreen({ language, setLanguage, t, onBack }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-brand-background">
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Pressable onPress={onBack} accessibilityLabel={t.back} style={styles.backButton}><Text style={styles.backArrow}>‹</Text></Pressable>
-          <Text style={styles.headerTitle}>{t.appSettings}</Text>
+      <ScrollView contentContainerClassName="flex-grow px-6 pb-8">
+        <View className="h-[72px] flex-row items-center">
+          <Pressable onPress={onBack} accessibilityLabel={t.back} className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-[#E9EEEA]"><Text className="-mt-[3px] text-[34px] font-light leading-8 text-[#1E3D35]">‹</Text></Pressable>
+          <Text className="text-[17px] font-extrabold tracking-[-0.4px] text-[#1E3D35]">{t.appSettings}</Text>
         </View>
-        <Text style={styles.eyebrow}>{t.appSettings.toUpperCase()}</Text>
-        <Text style={styles.title}>{t.language}</Text>
-        <View style={styles.card}>
-          <Text style={styles.description}>{t.languageDescription}</Text>
+        <Text className="text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">{t.appSettings.toUpperCase()}</Text>
+        <Text className="mb-7 mt-[9px] text-[31px] font-extrabold leading-9 tracking-[-1.2px] text-[#1E3D35]">{t.language}</Text>
+        <View className="rounded-[20px] bg-white px-[18px]">
+          <Text className="pb-[9px] pt-[18px] text-sm leading-5 text-[#71807A]">{t.languageDescription}</Text>
           {languages.map(({ code, label }) => (
-            <Pressable key={code} accessibilityLabel={label} accessibilityState={{ selected: language === code }} onPress={() => setLanguage(code)} style={styles.option}>
-              <Text style={styles.optionText}>{label}</Text>
-              {language === code && <Text style={styles.selectedCheck}>✓</Text>}
+            <Pressable key={code} accessibilityLabel={label} accessibilityState={{ selected: language === code }} onPress={() => setLanguage(code)} className="min-h-[59px] flex-row items-center justify-between border-t border-[#EDF0ED]">
+              <Text className="text-base font-bold text-[#1E3D35]">{label}</Text>
+              {language === code && <Text className="text-xl font-extrabold text-[#1E3D35]">✓</Text>}
             </Pressable>
           ))}
         </View>
-        <Text style={styles.hint}>{t.languageSystem}</Text>
+        <Text className="mt-[14px] text-[13px] leading-[19px] text-[#71807A]">{t.languageSystem}</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F7F7F3' }, content: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 32 }, header: { height: 72, flexDirection: 'row', alignItems: 'center' }, backButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E9EEEA', alignItems: 'center', justifyContent: 'center', marginRight: 12 }, backArrow: { color: '#1E3D35', fontSize: 34, fontWeight: '300', lineHeight: 32, marginTop: -3 }, headerTitle: { color: '#1E3D35', fontSize: 17, fontWeight: '800', letterSpacing: -0.4 },
-  eyebrow: { color: '#6C817A', fontSize: 11, fontWeight: '800', letterSpacing: 1.4 }, title: { color: '#1E3D35', fontSize: 31, lineHeight: 36, fontWeight: '800', letterSpacing: -1.2, marginTop: 9, marginBottom: 28 }, card: { backgroundColor: '#FFFFFF', borderRadius: 20, paddingHorizontal: 18 }, description: { color: '#71807A', fontSize: 14, lineHeight: 20, paddingTop: 18, paddingBottom: 9 }, option: { minHeight: 59, borderTopWidth: 1, borderTopColor: '#EDF0ED', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, optionText: { color: '#1E3D35', fontSize: 16, fontWeight: '700' }, selectedCheck: { color: '#1E3D35', fontSize: 20, fontWeight: '800' }, hint: { color: '#71807A', fontSize: 13, lineHeight: 19, marginTop: 14 },
-});
