@@ -1,13 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen({ t, onStart, onOpenSettings }) {
   return (
@@ -43,9 +36,7 @@ export default function HomeScreen({ t, onStart, onOpenSettings }) {
           </View>
           <Pressable
             onPress={onStart}
-            className={({ pressed }) =>
-              `h-[60px] flex-row items-center justify-between rounded-[18px] px-[22px] ${pressed ? 'bg-[#31564B]' : 'bg-[#1E3D35]'}`
-            }
+            className="h-[60px] flex-row items-center justify-between rounded-[18px] bg-[#1E3D35] px-[22px] active:bg-[#31564B]"
           >
             <Text className="text-base font-extrabold text-[#F3F78D]">{t.start}</Text>
             <Text className="text-[25px] font-normal text-[#F3F78D]">→</Text>

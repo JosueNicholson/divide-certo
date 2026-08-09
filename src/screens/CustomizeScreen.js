@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SplitTypeModal from '../components/SplitTypeModal';
 import { money } from '../utils/currency';
 import { formatCents, parseBrazilianNumber } from '../utils/formatters';
@@ -119,9 +120,7 @@ export default function CustomizeScreen({
             <Pressable
               accessibilityLabel={t.removePerson}
               onPress={() => changePeople(people - 1)}
-              className={({ pressed }) =>
-                `h-12 w-12 items-center justify-center rounded-[13px] bg-white ${pressed ? 'opacity-[0.55]' : ''}`
-              }
+              className="h-12 w-12 items-center justify-center rounded-[13px] bg-white active:opacity-[0.55]"
             >
               <Text className="text-[27px] font-medium leading-[30px] text-[#1E3D35]">−</Text>
             </Pressable>
@@ -134,9 +133,7 @@ export default function CustomizeScreen({
             <Pressable
               accessibilityLabel={t.addPerson}
               onPress={() => changePeople(people + 1)}
-              className={({ pressed }) =>
-                `h-12 w-12 items-center justify-center rounded-[13px] bg-white ${pressed ? 'opacity-[0.55]' : ''}`
-              }
+              className="h-12 w-12 items-center justify-center rounded-[13px] bg-white active:opacity-[0.55]"
             >
               <Text className="text-[27px] font-medium leading-[30px] text-[#1E3D35]">+</Text>
             </Pressable>
