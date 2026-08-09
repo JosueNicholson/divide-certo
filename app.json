@@ -2,6 +2,7 @@
   "expo": {
     "name": "Divide Certo",
     "slug": "divide-certo",
+    "scheme": "dividecerto",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -10,7 +11,8 @@
       "backgroundColor": "#F7F7F3"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.divide-certo"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,8 +20,25 @@
       },
       "edgeToEdgeEnabled": true
     },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "buildReactNativeFromSource": true
+          }
+        }
+      ],
+      "./plugins/with-fmt-cxx17"
+    ],
     "web": {
       "bundler": "metro"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f65a593f-91fa-4d67-8246-d8512c960230"
+      }
+    },
+    "owner": "josuegiraos-team"
   }
 }
