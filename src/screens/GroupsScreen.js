@@ -4,9 +4,13 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -45,6 +49,7 @@ export default function GroupsScreen({ onOpenSettings, t }) {
 
   const closeCreateModal = () => {
     if (isCreating) return;
+    Keyboard.dismiss();
     setIsCreateOpen(false);
     setGroupName('');
   };
@@ -60,9 +65,11 @@ export default function GroupsScreen({ onOpenSettings, t }) {
     try {
       const group = await createGroup(trimmedName);
       setGroups((currentGroups) => [group, ...currentGroups]);
+      Keyboard.dismiss();
       setIsCreateOpen(false);
       setGroupName('');
-    } catch {
+    } catch (error) {
+      console.error('Failed to create group:', error);
       Alert.alert(t.groupCreateErrorTitle, t.groupCreateError);
     } finally {
       setIsCreating(false);
@@ -150,47 +157,55 @@ export default function GroupsScreen({ onOpenSettings, t }) {
         visible={isCreateOpen}
         onRequestClose={closeCreateModal}
       >
-        <View className="flex-1 justify-end bg-black/35 px-4 pb-4">
-          <View className="rounded-[28px] bg-white px-6 pb-6 pt-5">
-            <View className="flex-row items-center">
-              <Text className="flex-1 text-[22px] font-extrabold text-[#1E3D35]">
-                {t.createGroupTitle}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          className="flex-1 bg-black/35"
+        >
+          <ScrollView
+            contentContainerClassName="flex-grow justify-end px-4 pb-4"
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="rounded-[28px] bg-white px-6 pb-6 pt-5">
+              <View className="flex-row items-center">
+                <Text className="flex-1 text-[22px] font-extrabold text-[#1E3D35]">
+                  {t.createGroupTitle}
+                </Text>
+                <Pressable
+                  accessibilityLabel={t.close}
+                  className="h-10 w-10 items-center justify-center rounded-full bg-[#E9EEEA]"
+                  onPress={closeCreateModal}
+                >
+                  <Text className="text-[25px] leading-7 text-[#1E3D35]">×</Text>
+                </Pressable>
+              </View>
+              <Text className="mt-3 text-sm leading-5 text-[#71807A]">
+                {t.createGroupDescription}
               </Text>
+              <TextInput
+                accessibilityLabel={t.groupName}
+                autoFocus
+                maxLength={120}
+                onChangeText={setGroupName}
+                placeholder={t.groupNamePlaceholder}
+                placeholderTextColor="#7A8983"
+                value={groupName}
+                className="mt-6 h-[58px] rounded-2xl bg-[#F1F4F0] px-4 text-base font-semibold text-[#1E3D35]"
+              />
               <Pressable
-                accessibilityLabel={t.close}
-                className="h-10 w-10 items-center justify-center rounded-full bg-[#E9EEEA]"
-                onPress={closeCreateModal}
+                accessibilityLabel={t.createGroup}
+                className="mt-4 h-[58px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
+                disabled={isCreating}
+                onPress={handleCreateGroup}
               >
-                <Text className="text-[25px] leading-7 text-[#1E3D35]">×</Text>
+                {isCreating ? (
+                  <ActivityIndicator color="#F3F78D" />
+                ) : (
+                  <Text className="text-base font-extrabold text-[#F3F78D]">{t.createGroup}</Text>
+                )}
               </Pressable>
             </View>
-            <Text className="mt-3 text-sm leading-5 text-[#71807A]">
-              {t.createGroupDescription}
-            </Text>
-            <TextInput
-              accessibilityLabel={t.groupName}
-              autoFocus
-              maxLength={120}
-              onChangeText={setGroupName}
-              placeholder={t.groupNamePlaceholder}
-              placeholderTextColor="#7A8983"
-              value={groupName}
-              className="mt-6 h-[58px] rounded-2xl bg-[#F1F4F0] px-4 text-base font-semibold text-[#1E3D35]"
-            />
-            <Pressable
-              accessibilityLabel={t.createGroup}
-              className="mt-4 h-[58px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
-              disabled={isCreating}
-              onPress={handleCreateGroup}
-            >
-              {isCreating ? (
-                <ActivityIndicator color="#F3F78D" />
-              ) : (
-                <Text className="text-base font-extrabold text-[#F3F78D]">{t.createGroup}</Text>
-              )}
-            </Pressable>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
