@@ -52,6 +52,14 @@ export const getGroupDetails = async (groupId) => {
 
   if (membersError) throw membersError;
 
+  const { data: bills, error: billsError } = await supabase
+    .from('bills')
+    .select('id, name, description, total_cents, currency_code, split_type, created_at')
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: false });
+
+  if (billsError) throw billsError;
+
   const isAdmin = members.some((member) => member.user_id === user?.id && member.role === 'admin');
   const { data: invites, error: invitesError } = isAdmin
     ? await supabase
@@ -63,7 +71,65 @@ export const getGroupDetails = async (groupId) => {
     : { data: [], error: null };
 
   if (invitesError) throw invitesError;
-  return { group, invites, isAdmin, members };
+  return { bills, group, invites, isAdmin, members };
+};
+
+export const createBill = async ({
+  groupId,
+  name,
+  description,
+  totalCents,
+  splitType,
+  userIds,
+}) => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('No authenticated user found');
+
+  const { data: bill, error: billError } = await supabase
+    .from('bills')
+    .insert({
+      created_by: session.user.id,
+      description: description.trim() || null,
+      group_id: groupId,
+      name: name.trim(),
+      split_type: splitType,
+      total_cents: totalCents,
+    })
+    .select('id, name, description, total_cents, currency_code, split_type, created_at')
+    .single();
+
+  if (billError) throw billError;
+
+  const participantRows = userIds.map((userId, index) => {
+    if (splitType === 'percentage') {
+      const basePoints = Math.floor(10000 / userIds.length);
+      return {
+        bill_id: bill.id,
+        percentage_basis_points: basePoints + (index === 0 ? 10000 % userIds.length : 0),
+        user_id: userId,
+      };
+    }
+
+    if (splitType === 'amount') {
+      const baseCents = Math.floor(totalCents / userIds.length);
+      return {
+        amount_cents: baseCents + (index === 0 ? totalCents % userIds.length : 0),
+        bill_id: bill.id,
+        user_id: userId,
+      };
+    }
+
+    return { bill_id: bill.id, user_id: userId };
+  });
+
+  const { error: participantsError } = await supabase
+    .from('bill_participants')
+    .insert(participantRows);
+  if (participantsError) throw participantsError;
+
+  return bill;
 };
 
 export const createGroupInvite = async (groupId, email, language) => {

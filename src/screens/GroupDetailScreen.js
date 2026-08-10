@@ -16,9 +16,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getLocale } from '../i18n';
 import { createGroupInvite, getGroupDetails } from '../services/groups';
+import { money } from '../utils/currency';
 
-export default function GroupDetailScreen({ groupId, language, onBack, t }) {
+export default function GroupDetailScreen({ groupId, language, onBack, onCreateBill, t }) {
   const [details, setDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -111,6 +113,13 @@ export default function GroupDetailScreen({ groupId, language, onBack, t }) {
               <Text className="mt-4 text-base leading-6 text-[#526760]">
                 {t.groupDetailDescription}
               </Text>
+              <Pressable
+                accessibilityLabel={t.createBill}
+                className="mt-6 h-[54px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
+                onPress={() => onCreateBill(details?.members ?? [])}
+              >
+                <Text className="text-base font-extrabold text-[#F3F78D]">{t.createBill}</Text>
+              </Pressable>
               {details?.isAdmin && (
                 <Pressable
                   accessibilityLabel={t.inviteMember}
@@ -121,8 +130,21 @@ export default function GroupDetailScreen({ groupId, language, onBack, t }) {
                 </Pressable>
               )}
               <Text className="mt-8 text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">
-                {t.groupMembers}
+                {t.groupBills}
               </Text>
+              {details?.bills.length === 0 ? (
+                <Text className="mt-3 text-sm leading-5 text-[#71807A]">{t.groupBillsEmpty}</Text>
+              ) : (
+                details?.bills.map((bill) => (
+                  <View className="mt-3 rounded-2xl bg-white px-4 py-4" key={bill.id}>
+                    <Text className="text-base font-extrabold text-[#1E3D35]">{bill.name}</Text>
+                    <Text className="mt-1 text-sm text-[#71807A]">
+                      {money(bill.total_cents / 100, getLocale(language))} ·{' '}
+                      {t.billSplitLabel(bill.split_type)}
+                    </Text>
+                  </View>
+                ))
+              )}
               {details?.isAdmin && details.invites.length > 0 && (
                 <View className="mt-7">
                   <Text className="text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">
@@ -136,6 +158,9 @@ export default function GroupDetailScreen({ groupId, language, onBack, t }) {
                   ))}
                 </View>
               )}
+              <Text className="mt-8 text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">
+                {t.groupMembers}
+              </Text>
             </View>
           }
           refreshControl={

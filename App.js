@@ -5,6 +5,7 @@ import './global.css';
 import AuthScreen from './src/screens/AuthScreen';
 import GroupsScreen from './src/screens/GroupsScreen';
 import GroupDetailScreen from './src/screens/GroupDetailScreen';
+import CreateBillScreen from './src/screens/CreateBillScreen';
 import { getSystemLanguage, getLocale, translations } from './src/i18n';
 import HomeScreen from './src/screens/HomeScreen';
 import CustomizeScreen from './src/screens/CustomizeScreen';
@@ -19,6 +20,7 @@ export default function App() {
   const [people, setPeople] = useState(3);
   const [screen, setScreen] = useState('groups');
   const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [groupMembers, setGroupMembers] = useState([]);
   const [names, setNames] = useState(['Ana', 'Bruno', 'Carla']);
   const [splitType, setSplitType] = useState('equal');
   const [language, setLanguage] = useState(getSystemLanguage);
@@ -88,12 +90,26 @@ export default function App() {
         onBack={() => setScreen('groups')}
       />
     );
+  } else if (screen === 'createBill' && selectedGroupId) {
+    content = (
+      <CreateBillScreen
+        groupId={selectedGroupId}
+        members={groupMembers}
+        onBack={() => setScreen('groupDetail')}
+        onCreated={() => setScreen('groupDetail')}
+        t={t}
+      />
+    );
   } else if (screen === 'groupDetail' && selectedGroupId) {
     content = (
       <GroupDetailScreen
         groupId={selectedGroupId}
         language={language}
         onBack={() => setScreen('groups')}
+        onCreateBill={(members) => {
+          setGroupMembers(members);
+          setScreen('createBill');
+        }}
         t={t}
       />
     );
