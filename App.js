@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 import AuthScreen from './src/screens/AuthScreen';
 import GroupsScreen from './src/screens/GroupsScreen';
+import GroupDetailScreen from './src/screens/GroupDetailScreen';
 import { getSystemLanguage, getLocale, translations } from './src/i18n';
 import HomeScreen from './src/screens/HomeScreen';
 import CustomizeScreen from './src/screens/CustomizeScreen';
@@ -17,6 +18,7 @@ export default function App() {
   const [amount, setAmount] = useState('186,40');
   const [people, setPeople] = useState(3);
   const [screen, setScreen] = useState('groups');
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [names, setNames] = useState(['Ana', 'Bruno', 'Carla']);
   const [splitType, setSplitType] = useState('equal');
   const [language, setLanguage] = useState(getSystemLanguage);
@@ -86,6 +88,15 @@ export default function App() {
         onBack={() => setScreen('groups')}
       />
     );
+  } else if (screen === 'groupDetail' && selectedGroupId) {
+    content = (
+      <GroupDetailScreen
+        groupId={selectedGroupId}
+        language={language}
+        onBack={() => setScreen('groups')}
+        t={t}
+      />
+    );
   } else if (screen === 'settings') {
     content = (
       <SettingsScreen
@@ -105,7 +116,16 @@ export default function App() {
       />
     );
   } else if (screen === 'groups') {
-    content = <GroupsScreen t={t} onOpenSettings={() => setScreen('settings')} />;
+    content = (
+      <GroupsScreen
+        t={t}
+        onOpenGroup={(groupId) => {
+          setSelectedGroupId(groupId);
+          setScreen('groupDetail');
+        }}
+        onOpenSettings={() => setScreen('settings')}
+      />
+    );
   } else {
     content = (
       <HomeScreen

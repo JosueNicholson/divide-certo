@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createGroup, getGroups } from '../services/groups';
 
-export default function GroupsScreen({ onOpenSettings, t }) {
+export default function GroupsScreen({ onOpenGroup, onOpenSettings, t }) {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -140,7 +140,11 @@ export default function GroupsScreen({ onOpenSettings, t }) {
           />
         }
         renderItem={({ item }) => (
-          <View className="mb-3 rounded-3xl bg-white px-5 py-5 shadow-lg shadow-[#1E3D35]/10 elevation-2">
+          <Pressable
+            accessibilityLabel={item.name}
+            className="mb-3 rounded-3xl bg-white px-5 py-5 shadow-lg shadow-[#1E3D35]/10 elevation-2"
+            onPress={() => onOpenGroup(item.id)}
+          >
             <View className="h-10 w-10 items-center justify-center rounded-full bg-[#DDE9D8]">
               <Text className="text-lg font-extrabold text-[#31564B]">
                 {item.name.trim().charAt(0).toUpperCase()}
@@ -148,7 +152,7 @@ export default function GroupsScreen({ onOpenSettings, t }) {
             </View>
             <Text className="mt-4 text-lg font-extrabold text-[#1E3D35]">{item.name}</Text>
             <Text className="mt-1 text-sm text-[#71807A]">{t.groupBillsSoon}</Text>
-          </View>
+          </Pressable>
         )}
       />
       <Modal
