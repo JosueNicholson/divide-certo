@@ -31,19 +31,11 @@ Deno.serve(async (request) => {
     const { email, groupId, language = 'pt' } = await request.json();
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     const resendFromEmail = Deno.env.get('RESEND_FROM_EMAIL');
     const appUrl = Deno.env.get('APP_URL');
 
-    if (
-      !supabaseUrl ||
-      !supabaseAnonKey ||
-      !serviceRoleKey ||
-      !resendApiKey ||
-      !resendFromEmail ||
-      !appUrl
-    ) {
+    if (!supabaseUrl || !supabaseAnonKey || !resendApiKey || !resendFromEmail || !appUrl) {
       throw new Error('Server configuration is incomplete');
     }
 
@@ -65,8 +57,7 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (membershipError || !membership) throw new Error('Forbidden');
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: invite, error: inviteError } = await adminClient
+    const { data: invite, error: inviteError } = await userClient
       .from('group_invites')
       .insert({ created_by: user.id, email: email.trim().toLowerCase(), group_id: groupId })
       .select('id')
@@ -87,15 +78,19 @@ Deno.serve(async (request) => {
     });
 
     if (!emailResponse.ok) {
-      await adminClient.from('group_invites').delete().eq('id', invite.id);
-      throw new Error('Unable to send invitation email');
+      await userClient.from('group_invites').delete().eq('id', invite.id);
+      throw new Error(`Resend error: ${await emailResponse.text()}`);
     }
 
     return Response.json({ inviteId: invite.id });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 400 },
-    );
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : JSON.stringify(error);
+    console.error('Failed to send group invite:', error);
+    return Response.json({ error: message }, { status: 400 });
   }
 });

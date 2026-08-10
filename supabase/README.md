@@ -31,8 +31,7 @@ APP_URL=dividecerto://invite
 
 Em seguida, publique a função com
 `supabase functions deploy send-group-invite`. O Supabase fornece
-automaticamente `SUPABASE_URL`, `SUPABASE_ANON_KEY` e
-`SUPABASE_SERVICE_ROLE_KEY` no ambiente da função.
+automaticamente `SUPABASE_URL` e `SUPABASE_ANON_KEY` no ambiente da função.
 
 O login Google em iOS e Android exige um build de desenvolvimento ou de
 produção, pois ele precisa registrar o esquema `dividecerto` no sistema. O

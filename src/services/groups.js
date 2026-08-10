@@ -71,5 +71,16 @@ export const createGroupInvite = async (groupId, email, language) => {
     body: { email, groupId, language },
   });
 
-  if (error) throw error;
+  if (error) {
+    const responseText = await error.context?.text().catch(() => '');
+    console.error('Group invite function response:', responseText);
+
+    try {
+      const response = JSON.parse(responseText);
+      throw new Error(response.error ?? error.message);
+    } catch (parseError) {
+      if (parseError instanceof SyntaxError) throw new Error(responseText || error.message);
+      throw parseError;
+    }
+  }
 };
