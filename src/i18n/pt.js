@@ -80,6 +80,7 @@ export default {
   billParticipantsRequired: 'Escolha pelo menos uma pessoa para esta conta.',
   billCreateErrorTitle: 'Não foi possível criar a conta',
   billCreateError: 'Tente novamente em alguns instantes.',
+  billSplitInvalidTitle: 'Revise a divisão',
   billSplitLabel: (type) =>
     ({ equal: 'Divisão igual', percentage: 'Divisão percentual', amount: 'Valores específicos' })[
       type

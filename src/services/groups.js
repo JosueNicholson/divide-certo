@@ -80,7 +80,7 @@ export const createBill = async ({
   description,
   totalCents,
   splitType,
-  userIds,
+  participants,
 }) => {
   const {
     data: { session },
@@ -102,20 +102,18 @@ export const createBill = async ({
 
   if (billError) throw billError;
 
-  const participantRows = userIds.map((userId, index) => {
+  const participantRows = participants.map(({ amountCents, percentageBasisPoints, userId }) => {
     if (splitType === 'percentage') {
-      const basePoints = Math.floor(10000 / userIds.length);
       return {
         bill_id: bill.id,
-        percentage_basis_points: basePoints + (index === 0 ? 10000 % userIds.length : 0),
+        percentage_basis_points: percentageBasisPoints,
         user_id: userId,
       };
     }
 
     if (splitType === 'amount') {
-      const baseCents = Math.floor(totalCents / userIds.length);
       return {
-        amount_cents: baseCents + (index === 0 ? totalCents % userIds.length : 0),
+        amount_cents: amountCents,
         bill_id: bill.id,
         user_id: userId,
       };
@@ -127,7 +125,11 @@ export const createBill = async ({
   const { error: participantsError } = await supabase
     .from('bill_participants')
     .insert(participantRows);
-  if (participantsError) throw participantsError;
+  if (participantsError) {
+    const { error: deleteError } = await supabase.from('bills').delete().eq('id', bill.id);
+    if (deleteError) console.error('Failed to remove incomplete bill:', deleteError);
+    throw participantsError;
+  }
 
   return bill;
 };

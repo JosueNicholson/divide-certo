@@ -79,6 +79,7 @@ export default {
   billParticipantsRequired: 'Choose at least one person for this bill.',
   billCreateErrorTitle: 'Unable to create the bill',
   billCreateError: 'Please try again in a few moments.',
+  billSplitInvalidTitle: 'Review the split',
   billSplitLabel: (type) =>
     ({ equal: 'Equal split', percentage: 'Percentage split', amount: 'Specific amounts' })[type],
   groupMembers: 'MEMBERS',

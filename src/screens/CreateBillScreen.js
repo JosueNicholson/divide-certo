@@ -12,9 +12,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SplitTypeModal from '../components/SplitTypeModal';
 import { createBill } from '../services/groups';
+import { money } from '../utils/currency';
 import { formatCents, parseBrazilianNumber } from '../utils/formatters';
 
-export default function CreateBillScreen({ groupId, members, onBack, onCreated, t }) {
+export default function CreateBillScreen({ groupId, locale, members, onBack, onCreated, t }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('0,00');
@@ -22,6 +23,7 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
     members.map((member) => member.user_id),
   );
   const [splitType, setSplitType] = useState('equal');
+  const [participantDetails, setParticipantDetails] = useState({});
   const [isSplitSelectOpen, setIsSplitSelectOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const totalCents = useMemo(() => Math.round(parseBrazilianNumber(amount) * 100), [amount]);
@@ -31,6 +33,37 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
     ['amount', t.amount, t.amountCaption],
   ];
   const selectedSplit = splitOptions.find(([type]) => type === splitType);
+  const selectedMembers = members.filter((member) => selectedUserIds.includes(member.user_id));
+  const percentageTotal = selectedMembers.reduce(
+    (sum, member) => sum + (Number.parseInt(participantDetails[member.user_id], 10) || 0),
+    0,
+  );
+  const specificAmountTotal = selectedMembers.reduce(
+    (sum, member) => sum + parseBrazilianNumber(participantDetails[member.user_id] || '0,00'),
+    0,
+  );
+  const validation =
+    splitType === 'percentage' && percentageTotal > 100
+      ? { type: 'error', message: t.percentageOver(percentageTotal) }
+      : splitType === 'amount' && specificAmountTotal > totalCents / 100
+        ? {
+            type: 'error',
+            message: t.amountOver(
+              money(specificAmountTotal, locale),
+              money(totalCents / 100, locale),
+            ),
+          }
+        : splitType === 'percentage' && percentageTotal < 100
+          ? { type: 'warning', message: t.percentageMissing(100 - percentageTotal) }
+          : splitType === 'amount' && specificAmountTotal < totalCents / 100
+            ? {
+                type: 'warning',
+                message: t.amountMissing(
+                  money(totalCents / 100 - specificAmountTotal, locale),
+                  money(totalCents / 100, locale),
+                ),
+              }
+            : null;
 
   const toggleParticipant = (userId) => {
     setSelectedUserIds((currentIds) =>
@@ -38,6 +71,10 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
         ? currentIds.filter((currentId) => currentId !== userId)
         : [...currentIds, userId],
     );
+  };
+
+  const updateParticipantDetail = (userId, value) => {
+    setParticipantDetails((currentDetails) => ({ ...currentDetails, [userId]: value }));
   };
 
   const handleCreate = async () => {
@@ -53,6 +90,10 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
       Alert.alert(t.billParticipantsRequiredTitle, t.billParticipantsRequired);
       return;
     }
+    if (validation?.type === 'error') {
+      Alert.alert(t.billSplitInvalidTitle, validation.message);
+      return;
+    }
 
     setIsCreating(true);
     try {
@@ -62,7 +103,11 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
         name,
         splitType,
         totalCents,
-        userIds: selectedUserIds,
+        participants: selectedUserIds.map((userId) => ({
+          amountCents: Math.round(parseBrazilianNumber(participantDetails[userId] || '0,00') * 100),
+          percentageBasisPoints: (Number.parseInt(participantDetails[userId], 10) || 0) * 100,
+          userId,
+        })),
       });
       onCreated(bill);
     } catch (error) {
@@ -138,6 +183,21 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
         </View>
 
         <Text className="mb-2 mt-7 text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">
+          {t.splitType}
+        </Text>
+        <Pressable
+          accessibilityLabel={t.selectSplit}
+          className="min-h-[68px] flex-row items-center justify-between rounded-2xl border border-[#DDE4DE] bg-white px-4"
+          onPress={() => setIsSplitSelectOpen(true)}
+        >
+          <View>
+            <Text className="text-base font-extrabold text-[#1E3D35]">{selectedSplit[1]}</Text>
+            <Text className="mt-1 text-xs text-[#71807A]">{selectedSplit[2]}</Text>
+          </View>
+          <Text className="text-2xl text-[#1E3D35]">⌄</Text>
+        </Pressable>
+
+        <Text className="mb-2 mt-7 text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">
           {t.participants}
         </Text>
         <Text className="mb-3 text-sm leading-5 text-[#71807A]">
@@ -158,9 +218,39 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
                     {member.profiles.display_name.trim().charAt(0).toUpperCase()}
                   </Text>
                 </View>
-                <Text className="ml-3 flex-1 text-base font-bold text-[#1E3D35]">
-                  {member.profiles.display_name}
-                </Text>
+                <View className="ml-3 flex-1">
+                  <Text className="text-base font-bold text-[#1E3D35]">
+                    {member.profiles.display_name}
+                  </Text>
+                  {isSelected && splitType === 'equal' && (
+                    <Text className="mt-0.5 text-xs font-semibold text-[#71807A]">
+                      {money(totalCents / 100 / selectedUserIds.length, locale)}
+                    </Text>
+                  )}
+                </View>
+                {isSelected && splitType !== 'equal' && (
+                  <View className="mr-3 h-[37px] w-[88px] flex-row items-center rounded-[10px] bg-[#F1F4F0] pl-2">
+                    <TextInput
+                      accessibilityLabel={`${member.profiles.display_name}: ${splitType === 'percentage' ? t.percentage : t.amount}`}
+                      keyboardType="number-pad"
+                      onChangeText={(value) =>
+                        updateParticipantDetail(
+                          member.user_id,
+                          splitType === 'percentage'
+                            ? value.replace(/\D/g, '')
+                            : formatCents(value, 9),
+                        )
+                      }
+                      placeholder={splitType === 'percentage' ? '0' : '0,00'}
+                      placeholderTextColor="#7A8983"
+                      value={participantDetails[member.user_id] || ''}
+                      className="flex-1 p-0 text-[13px] font-bold text-[#1E3D35]"
+                    />
+                    <Text className="px-[7px] text-[11px] font-extrabold text-[#71807A]">
+                      {splitType === 'percentage' ? '%' : 'R$'}
+                    </Text>
+                  </View>
+                )}
                 <View
                   className={
                     isSelected
@@ -174,21 +264,36 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
             );
           })}
         </View>
-        <Text className="mb-2 mt-7 text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">
-          {t.splitType}
-        </Text>
-        <Pressable
-          accessibilityLabel={t.selectSplit}
-          className="min-h-[68px] flex-row items-center justify-between rounded-2xl border border-[#DDE4DE] bg-white px-4"
-          onPress={() => setIsSplitSelectOpen(true)}
-        >
-          <View>
-            <Text className="text-base font-extrabold text-[#1E3D35]">{selectedSplit[1]}</Text>
-            <Text className="mt-1 text-xs text-[#71807A]">{selectedSplit[2]}</Text>
+        {validation ? (
+          <View
+            className={
+              validation.type === 'error'
+                ? 'mt-3 flex-row items-start rounded-[13px] bg-[#FDE8E4] px-[14px] py-3'
+                : 'mt-3 flex-row items-start rounded-[13px] bg-[#FFF4CF] px-[14px] py-3'
+            }
+          >
+            <Text
+              className={
+                validation.type === 'error'
+                  ? 'mr-2 mt-px text-sm font-black text-[#A83E32]'
+                  : 'mr-2 mt-px text-sm font-black text-[#8A6500]'
+              }
+            >
+              !
+            </Text>
+            <Text
+              className={
+                validation.type === 'error'
+                  ? 'flex-1 text-[13px] font-semibold leading-[18px] text-[#8C352C]'
+                  : 'flex-1 text-[13px] font-semibold leading-[18px] text-[#715300]'
+              }
+            >
+              {validation.message}
+            </Text>
           </View>
-          <Text className="text-2xl text-[#1E3D35]">⌄</Text>
-        </Pressable>
-        <Text className="mt-3 text-sm leading-5 text-[#71807A]">{t.billSplitInitialValues}</Text>
+        ) : splitType === 'equal' ? (
+          <Text className="mt-3 text-sm leading-5 text-[#71807A]">{t.billSplitInitialValues}</Text>
+        ) : null}
         <Pressable
           accessibilityLabel={t.createBill}
           className="mt-8 h-[58px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
@@ -205,6 +310,7 @@ export default function CreateBillScreen({ groupId, members, onBack, onCreated, 
           onClose={() => setIsSplitSelectOpen(false)}
           onSelect={(type) => {
             setSplitType(type);
+            setParticipantDetails({});
             setIsSplitSelectOpen(false);
           }}
           options={splitOptions}

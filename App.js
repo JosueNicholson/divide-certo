@@ -97,6 +97,7 @@ export default function App() {
         members={groupMembers}
         onBack={() => setScreen('groupDetail')}
         onCreated={() => setScreen('groupDetail')}
+        locale={locale}
         t={t}
       />
     );

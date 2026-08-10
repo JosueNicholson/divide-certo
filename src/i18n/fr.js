@@ -81,6 +81,7 @@ export default {
   billParticipantsRequired: 'Choisissez au moins une personne pour cette addition.',
   billCreateErrorTitle: 'Impossible de créer l’addition',
   billCreateError: 'Réessayez dans quelques instants.',
+  billSplitInvalidTitle: 'Vérifiez le partage',
   billSplitLabel: (type) =>
     ({
       equal: 'Partage égal',
