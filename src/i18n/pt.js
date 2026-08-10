@@ -93,6 +93,11 @@ export default {
   billLoadError: 'Tente novamente em alguns instantes.',
   billDeleteErrorTitle: 'Não foi possível excluir a conta',
   billDeleteError: 'Tente novamente em alguns instantes.',
+  inviteSignIn: 'Entre com o e-mail convidado para aceitar o convite.',
+  inviteAcceptedTitle: 'Convite aceito',
+  inviteAccepted: 'Você agora faz parte do grupo.',
+  inviteAcceptErrorTitle: 'Não foi possível aceitar o convite',
+  inviteAcceptError: 'Entre com o e-mail convidado e tente abrir o link novamente.',
   billSplitLabel: (type) =>
     ({ equal: 'Divisão igual', percentage: 'Divisão percentual', amount: 'Valores específicos' })[
       type

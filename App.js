@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Linking from 'expo-linking';
 import { useEffect, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 import AuthScreen from './src/screens/AuthScreen';
@@ -11,6 +13,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import CustomizeScreen from './src/screens/CustomizeScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { isSupabaseConfigured, supabase } from './src/services/supabase';
+import { acceptGroupInvite } from './src/services/groups';
 import { parseBrazilianNumber } from './src/utils/formatters';
 
 const LANGUAGE_STORAGE_KEY = '@divide-certo:language';
@@ -26,6 +29,7 @@ export default function App() {
   const [splitType, setSplitType] = useState('equal');
   const [language, setLanguage] = useState(getSystemLanguage);
   const [session, setSession] = useState(null);
+  const [pendingInviteId, setPendingInviteId] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(isSupabaseConfigured);
   const t = translations[language];
   const locale = getLocale(language);
@@ -35,6 +39,41 @@ export default function App() {
       if (translations[savedLanguage]) setLanguage(savedLanguage);
     });
   }, []);
+
+  useEffect(() => {
+    const setInviteFromUrl = (url) => {
+      const inviteId = Linking.parse(url).queryParams?.inviteId;
+      if (typeof inviteId === 'string') setPendingInviteId(inviteId);
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) setInviteFromUrl(url);
+    });
+    const subscription = Linking.addEventListener('url', ({ url }) => setInviteFromUrl(url));
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!session || !pendingInviteId) return;
+
+    acceptGroupInvite(pendingInviteId)
+      .then(() => {
+        setPendingInviteId(null);
+        setScreen('groups');
+        Alert.alert(t.inviteAcceptedTitle, t.inviteAccepted);
+      })
+      .catch(() => {
+        setPendingInviteId(null);
+        Alert.alert(t.inviteAcceptErrorTitle, t.inviteAcceptError);
+      });
+  }, [
+    pendingInviteId,
+    session,
+    t.inviteAcceptError,
+    t.inviteAcceptErrorTitle,
+    t.inviteAccepted,
+    t.inviteAcceptedTitle,
+  ]);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -135,6 +174,7 @@ export default function App() {
       <AuthScreen
         isLoading={isSessionLoading}
         isSupabaseConfigured={isSupabaseConfigured}
+        hasPendingInvite={Boolean(pendingInviteId)}
         t={t}
         onOpenSettings={() => setScreen('settings')}
       />

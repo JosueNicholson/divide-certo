@@ -92,6 +92,11 @@ export default {
   billLoadError: 'Please try again in a few moments.',
   billDeleteErrorTitle: 'Unable to delete the bill',
   billDeleteError: 'Please try again in a few moments.',
+  inviteSignIn: 'Sign in with the invited email to accept the invitation.',
+  inviteAcceptedTitle: 'Invitation accepted',
+  inviteAccepted: 'You are now a member of the group.',
+  inviteAcceptErrorTitle: 'Unable to accept the invitation',
+  inviteAcceptError: 'Sign in with the invited email and open the link again.',
   billSplitLabel: (type) =>
     ({ equal: 'Equal split', percentage: 'Percentage split', amount: 'Specific amounts' })[type],
   groupMembers: 'MEMBERS',

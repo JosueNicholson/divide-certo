@@ -94,6 +94,11 @@ export default {
   billLoadError: 'Réessayez dans quelques instants.',
   billDeleteErrorTitle: 'Impossible de supprimer l’addition',
   billDeleteError: 'Réessayez dans quelques instants.',
+  inviteSignIn: 'Connectez-vous avec l’e-mail invité pour accepter l’invitation.',
+  inviteAcceptedTitle: 'Invitation acceptée',
+  inviteAccepted: 'Vous faites maintenant partie du groupe.',
+  inviteAcceptErrorTitle: 'Impossible d’accepter l’invitation',
+  inviteAcceptError: 'Connectez-vous avec l’e-mail invité et ouvrez de nouveau le lien.',
   billSplitLabel: (type) =>
     ({
       equal: 'Partage égal',

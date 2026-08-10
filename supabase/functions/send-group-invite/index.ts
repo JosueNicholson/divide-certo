@@ -71,6 +71,7 @@ Deno.serve(async (request) => {
         from: resendFromEmail,
         html: `<h1>${content.title}</h1><p>${content.body}</p><p><a href="${inviteUrl}">${content.cta}</a></p>`,
         subject: content.title,
+        text: `${content.title}\n\n${content.body}\n\n${inviteUrl}`,
         to: [email.trim().toLowerCase()],
       }),
       headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },

@@ -93,6 +93,11 @@ export default {
   billLoadError: 'Inténtalo de nuevo en unos momentos.',
   billDeleteErrorTitle: 'No fue posible eliminar la cuenta',
   billDeleteError: 'Inténtalo de nuevo en unos momentos.',
+  inviteSignIn: 'Inicia sesión con el correo invitado para aceptar la invitación.',
+  inviteAcceptedTitle: 'Invitación aceptada',
+  inviteAccepted: 'Ahora formas parte del grupo.',
+  inviteAcceptErrorTitle: 'No fue posible aceptar la invitación',
+  inviteAcceptError: 'Inicia sesión con el correo invitado y abre el enlace de nuevo.',
   billSplitLabel: (type) =>
     ({ equal: 'División igual', percentage: 'División porcentual', amount: 'Valores específicos' })[
       type

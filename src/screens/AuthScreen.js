@@ -12,7 +12,13 @@ const redirectTo = AuthSession.makeRedirectUri({
   scheme: 'dividecerto',
 });
 
-export default function AuthScreen({ isLoading, isSupabaseConfigured, onOpenSettings, t }) {
+export default function AuthScreen({
+  hasPendingInvite,
+  isLoading,
+  isSupabaseConfigured,
+  onOpenSettings,
+  t,
+}) {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const signInWithGoogle = async () => {
@@ -67,6 +73,11 @@ export default function AuthScreen({ isLoading, isSupabaseConfigured, onOpenSett
           {t.signInTitle.replace('{line}', '\n')}
         </Text>
         <Text className="mt-5 text-base leading-6 text-[#526760]">{t.signInDescription}</Text>
+        {hasPendingInvite && (
+          <Text className="mt-4 rounded-xl bg-[#E9EEEA] px-4 py-3 text-sm font-semibold leading-5 text-[#31564B]">
+            {t.inviteSignIn}
+          </Text>
+        )}
         <Pressable
           accessibilityLabel={t.continueWithGoogle}
           className="mt-9 h-[60px] flex-row items-center justify-center rounded-[18px] bg-[#1E3D35] active:bg-[#31564B]"

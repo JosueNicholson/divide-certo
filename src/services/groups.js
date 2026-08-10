@@ -210,3 +210,8 @@ export const createGroupInvite = async (groupId, email, language) => {
     }
   }
 };
+
+export const acceptGroupInvite = async (inviteId) => {
+  const { error } = await supabase.rpc('accept_group_invitation', { invitation_id: inviteId });
+  if (error) throw error;
+};
