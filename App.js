@@ -21,6 +21,7 @@ export default function App() {
   const [screen, setScreen] = useState('groups');
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [groupMembers, setGroupMembers] = useState([]);
+  const [selectedBillId, setSelectedBillId] = useState(null);
   const [names, setNames] = useState(['Ana', 'Bruno', 'Carla']);
   const [splitType, setSplitType] = useState('equal');
   const [language, setLanguage] = useState(getSystemLanguage);
@@ -90,9 +91,10 @@ export default function App() {
         onBack={() => setScreen('groups')}
       />
     );
-  } else if (screen === 'createBill' && selectedGroupId) {
+  } else if ((screen === 'createBill' || screen === 'editBill') && selectedGroupId) {
     content = (
       <CreateBillScreen
+        billId={screen === 'editBill' ? selectedBillId : null}
         groupId={selectedGroupId}
         members={groupMembers}
         onBack={() => setScreen('groupDetail')}
@@ -110,6 +112,11 @@ export default function App() {
         onCreateBill={(members) => {
           setGroupMembers(members);
           setScreen('createBill');
+        }}
+        onEditBill={(billId, members) => {
+          setSelectedBillId(billId);
+          setGroupMembers(members);
+          setScreen('editBill');
         }}
         t={t}
       />

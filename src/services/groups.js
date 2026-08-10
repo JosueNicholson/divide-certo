@@ -54,7 +54,7 @@ export const getGroupDetails = async (groupId) => {
 
   const { data: bills, error: billsError } = await supabase
     .from('bills')
-    .select('id, name, description, total_cents, currency_code, split_type, created_at')
+    .select('id, name, description, total_cents, currency_code, split_type, created_at, created_by')
     .eq('group_id', groupId)
     .order('created_at', { ascending: false });
 
@@ -71,7 +71,25 @@ export const getGroupDetails = async (groupId) => {
     : { data: [], error: null };
 
   if (invitesError) throw invitesError;
-  return { bills, group, invites, isAdmin, members };
+  return {
+    bills: bills.map((bill) => ({ ...bill, canManage: isAdmin || bill.created_by === user?.id })),
+    group,
+    invites,
+    isAdmin,
+    members,
+  };
+};
+
+export const getBillDetails = async (billId) => {
+  const { data, error } = await supabase
+    .from('bills')
+    .select(
+      'id, name, description, total_cents, split_type, bill_participants(user_id, percentage_basis_points, amount_cents)',
+    )
+    .eq('id', billId)
+    .single();
+  if (error) throw error;
+  return data;
 };
 
 export const createBill = async ({
@@ -132,6 +150,46 @@ export const createBill = async ({
   }
 
   return bill;
+};
+
+export const updateBill = async ({
+  billId,
+  description,
+  name,
+  participants,
+  splitType,
+  totalCents,
+}) => {
+  const { error: deleteParticipantsError } = await supabase
+    .from('bill_participants')
+    .delete()
+    .eq('bill_id', billId);
+  if (deleteParticipantsError) throw deleteParticipantsError;
+
+  const { error: billError } = await supabase
+    .from('bills')
+    .update({
+      description: description.trim() || null,
+      name: name.trim(),
+      split_type: splitType,
+      total_cents: totalCents,
+    })
+    .eq('id', billId);
+  if (billError) throw billError;
+
+  const rows = participants.map(({ amountCents, percentageBasisPoints, userId }) => ({
+    bill_id: billId,
+    user_id: userId,
+    ...(splitType === 'percentage' ? { percentage_basis_points: percentageBasisPoints } : {}),
+    ...(splitType === 'amount' ? { amount_cents: amountCents } : {}),
+  }));
+  const { error: participantsError } = await supabase.from('bill_participants').insert(rows);
+  if (participantsError) throw participantsError;
+};
+
+export const deleteBill = async (billId) => {
+  const { error } = await supabase.from('bills').delete().eq('id', billId);
+  if (error) throw error;
 };
 
 export const createGroupInvite = async (groupId, email, language) => {

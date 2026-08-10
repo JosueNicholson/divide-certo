@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,11 +11,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SplitTypeModal from '../components/SplitTypeModal';
-import { createBill } from '../services/groups';
+import { createBill, deleteBill, getBillDetails, updateBill } from '../services/groups';
 import { money } from '../utils/currency';
 import { formatCents, parseBrazilianNumber } from '../utils/formatters';
 
-export default function CreateBillScreen({ groupId, locale, members, onBack, onCreated, t }) {
+export default function CreateBillScreen({
+  billId,
+  groupId,
+  locale,
+  members,
+  onBack,
+  onCreated,
+  t,
+}) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('0,00');
@@ -26,6 +34,7 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
   const [participantDetails, setParticipantDetails] = useState({});
   const [isSplitSelectOpen, setIsSplitSelectOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingBill, setIsLoadingBill] = useState(Boolean(billId));
   const totalCents = useMemo(() => Math.round(parseBrazilianNumber(amount) * 100), [amount]);
   const splitOptions = [
     ['equal', t.equal, t.equalCaption],
@@ -77,6 +86,32 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
     setParticipantDetails((currentDetails) => ({ ...currentDetails, [userId]: value }));
   };
 
+  useEffect(() => {
+    if (!billId) return;
+    getBillDetails(billId)
+      .then((bill) => {
+        setName(bill.name);
+        setDescription(bill.description || '');
+        setAmount(formatCents(String(bill.total_cents), 9));
+        setSplitType(bill.split_type);
+        setSelectedUserIds(bill.bill_participants.map((participant) => participant.user_id));
+        setParticipantDetails(
+          Object.fromEntries(
+            bill.bill_participants.map((participant) => [
+              participant.user_id,
+              bill.split_type === 'percentage'
+                ? String((participant.percentage_basis_points || 0) / 100)
+                : bill.split_type === 'amount'
+                  ? formatCents(String(participant.amount_cents || 0), 9)
+                  : '',
+            ]),
+          ),
+        );
+      })
+      .catch(() => Alert.alert(t.billLoadErrorTitle, t.billLoadError))
+      .finally(() => setIsLoadingBill(false));
+  }, [billId, t.billLoadError, t.billLoadErrorTitle]);
+
   const handleCreate = async () => {
     if (!name.trim()) {
       Alert.alert(t.billNameRequiredTitle, t.billNameRequired);
@@ -97,7 +132,7 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
 
     setIsCreating(true);
     try {
-      const bill = await createBill({
+      const billPayload = {
         description,
         groupId,
         name,
@@ -108,8 +143,10 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
           percentageBasisPoints: (Number.parseInt(participantDetails[userId], 10) || 0) * 100,
           userId,
         })),
-      });
-      onCreated(bill);
+      };
+      if (billId) await updateBill({ ...billPayload, billId });
+      else await createBill(billPayload);
+      onCreated();
     } catch (error) {
       console.error('Failed to create bill:', error);
       Alert.alert(t.billCreateErrorTitle, t.billCreateError);
@@ -117,6 +154,35 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
       setIsCreating(false);
     }
   };
+
+  const handleDelete = () => {
+    Alert.alert(t.deleteBillTitle, t.deleteBillMessage, [
+      { style: 'cancel', text: t.cancel },
+      {
+        style: 'destructive',
+        text: t.deleteBill,
+        onPress: async () => {
+          setIsCreating(true);
+          try {
+            await deleteBill(billId);
+            onCreated();
+          } catch {
+            Alert.alert(t.billDeleteErrorTitle, t.billDeleteError);
+          } finally {
+            setIsCreating(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  if (isLoadingBill) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-brand-background">
+        <ActivityIndicator color="#1E3D35" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-brand-background">
@@ -134,10 +200,10 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
           <Text className="text-lg font-bold tracking-[-0.5px] text-[#1E3D35]">divide certo</Text>
         </View>
         <Text className="mt-5 text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">
-          {t.groupBillEyebrow}
+          {billId ? t.editBillEyebrow : t.groupBillEyebrow}
         </Text>
         <Text className="mt-2 text-[36px] font-extrabold leading-[40px] tracking-[-1.5px] text-[#1E3D35]">
-          {t.createBillTitle}
+          {billId ? t.editBillTitle : t.createBillTitle}
         </Text>
         <Text className="mt-3 text-base leading-6 text-[#526760]">{t.createBillDescription}</Text>
 
@@ -295,7 +361,7 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
           <Text className="mt-3 text-sm leading-5 text-[#71807A]">{t.billSplitInitialValues}</Text>
         ) : null}
         <Pressable
-          accessibilityLabel={t.createBill}
+          accessibilityLabel={billId ? t.saveBill : t.createBill}
           className="mt-8 h-[58px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
           disabled={isCreating}
           onPress={handleCreate}
@@ -303,9 +369,21 @@ export default function CreateBillScreen({ groupId, locale, members, onBack, onC
           {isCreating ? (
             <ActivityIndicator color="#F3F78D" />
           ) : (
-            <Text className="text-base font-extrabold text-[#F3F78D]">{t.createBill}</Text>
+            <Text className="text-base font-extrabold text-[#F3F78D]">
+              {billId ? t.saveBill : t.createBill}
+            </Text>
           )}
         </Pressable>
+        {billId && (
+          <Pressable
+            accessibilityLabel={t.deleteBill}
+            className="mt-4 h-[52px] items-center justify-center rounded-2xl border border-[#C95D51]"
+            disabled={isCreating}
+            onPress={handleDelete}
+          >
+            <Text className="text-base font-extrabold text-[#A83E32]">{t.deleteBill}</Text>
+          </Pressable>
+        )}
         <SplitTypeModal
           onClose={() => setIsSplitSelectOpen(false)}
           onSelect={(type) => {

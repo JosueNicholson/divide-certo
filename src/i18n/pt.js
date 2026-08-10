@@ -81,6 +81,18 @@ export default {
   billCreateErrorTitle: 'Não foi possível criar a conta',
   billCreateError: 'Tente novamente em alguns instantes.',
   billSplitInvalidTitle: 'Revise a divisão',
+  editBill: 'Editar conta',
+  editBillEyebrow: 'EDITAR CONTA',
+  editBillTitle: 'Editar a conta',
+  saveBill: 'Salvar alterações',
+  deleteBill: 'Excluir conta',
+  deleteBillTitle: 'Excluir esta conta?',
+  deleteBillMessage: 'Essa ação não pode ser desfeita.',
+  cancel: 'Cancelar',
+  billLoadErrorTitle: 'Não foi possível carregar a conta',
+  billLoadError: 'Tente novamente em alguns instantes.',
+  billDeleteErrorTitle: 'Não foi possível excluir a conta',
+  billDeleteError: 'Tente novamente em alguns instantes.',
   billSplitLabel: (type) =>
     ({ equal: 'Divisão igual', percentage: 'Divisão percentual', amount: 'Valores específicos' })[
       type

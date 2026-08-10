@@ -82,6 +82,18 @@ export default {
   billCreateErrorTitle: 'Impossible de créer l’addition',
   billCreateError: 'Réessayez dans quelques instants.',
   billSplitInvalidTitle: 'Vérifiez le partage',
+  editBill: 'Modifier l’addition',
+  editBillEyebrow: 'MODIFIER L’ADDITION',
+  editBillTitle: 'Modifier l’addition',
+  saveBill: 'Enregistrer les modifications',
+  deleteBill: 'Supprimer l’addition',
+  deleteBillTitle: 'Supprimer cette addition ?',
+  deleteBillMessage: 'Cette action est irréversible.',
+  cancel: 'Annuler',
+  billLoadErrorTitle: 'Impossible de charger l’addition',
+  billLoadError: 'Réessayez dans quelques instants.',
+  billDeleteErrorTitle: 'Impossible de supprimer l’addition',
+  billDeleteError: 'Réessayez dans quelques instants.',
   billSplitLabel: (type) =>
     ({
       equal: 'Partage égal',

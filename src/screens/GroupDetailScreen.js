@@ -20,7 +20,14 @@ import { getLocale } from '../i18n';
 import { createGroupInvite, getGroupDetails } from '../services/groups';
 import { money } from '../utils/currency';
 
-export default function GroupDetailScreen({ groupId, language, onBack, onCreateBill, t }) {
+export default function GroupDetailScreen({
+  groupId,
+  language,
+  onBack,
+  onCreateBill,
+  onEditBill,
+  t,
+}) {
   const [details, setDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -136,13 +143,24 @@ export default function GroupDetailScreen({ groupId, language, onBack, onCreateB
                 <Text className="mt-3 text-sm leading-5 text-[#71807A]">{t.groupBillsEmpty}</Text>
               ) : (
                 details?.bills.map((bill) => (
-                  <View className="mt-3 rounded-2xl bg-white px-4 py-4" key={bill.id}>
+                  <Pressable
+                    accessibilityLabel={bill.canManage ? `${t.editBill}: ${bill.name}` : bill.name}
+                    className="mt-3 rounded-2xl bg-white px-4 py-4"
+                    disabled={!bill.canManage}
+                    key={bill.id}
+                    onPress={() => onEditBill(bill.id, details?.members ?? [])}
+                  >
                     <Text className="text-base font-extrabold text-[#1E3D35]">{bill.name}</Text>
                     <Text className="mt-1 text-sm text-[#71807A]">
                       {money(bill.total_cents / 100, getLocale(language))} ·{' '}
                       {t.billSplitLabel(bill.split_type)}
                     </Text>
-                  </View>
+                    {bill.canManage && (
+                      <Text className="mt-2 text-xs font-extrabold text-[#31564B]">
+                        {t.editBill}
+                      </Text>
+                    )}
+                  </Pressable>
                 ))
               )}
               {details?.isAdmin && details.invites.length > 0 && (
