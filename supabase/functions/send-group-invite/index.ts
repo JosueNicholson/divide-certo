@@ -1,0 +1,101 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const emailContent = {
+  en: {
+    body: 'You were invited to join a Divide Certo group.',
+    cta: 'Open Divide Certo',
+    title: 'You have a group invitation',
+  },
+  es: {
+    body: 'Te invitaron a unirte a un grupo en Divide Certo.',
+    cta: 'Abrir Divide Certo',
+    title: 'Tienes una invitación a un grupo',
+  },
+  fr: {
+    body: 'Vous êtes invité à rejoindre un groupe sur Divide Certo.',
+    cta: 'Ouvrir Divide Certo',
+    title: 'Vous avez une invitation à un groupe',
+  },
+  pt: {
+    body: 'Você foi convidado a participar de um grupo no Divide Certo.',
+    cta: 'Abrir Divide Certo',
+    title: 'Você tem um convite para um grupo',
+  },
+};
+
+Deno.serve(async (request) => {
+  try {
+    const authorization = request.headers.get('Authorization');
+    if (!authorization) throw new Error('Unauthorized');
+
+    const { email, groupId, language = 'pt' } = await request.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    const resendFromEmail = Deno.env.get('RESEND_FROM_EMAIL');
+    const appUrl = Deno.env.get('APP_URL');
+
+    if (
+      !supabaseUrl ||
+      !supabaseAnonKey ||
+      !serviceRoleKey ||
+      !resendApiKey ||
+      !resendFromEmail ||
+      !appUrl
+    ) {
+      throw new Error('Server configuration is incomplete');
+    }
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authorization } },
+    });
+    const {
+      data: { user },
+      error: userError,
+    } = await userClient.auth.getUser();
+    if (userError || !user) throw new Error('Unauthorized');
+
+    const { data: membership, error: membershipError } = await userClient
+      .from('group_members')
+      .select('role')
+      .eq('group_id', groupId)
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    if (membershipError || !membership) throw new Error('Forbidden');
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data: invite, error: inviteError } = await adminClient
+      .from('group_invites')
+      .insert({ created_by: user.id, email: email.trim().toLowerCase(), group_id: groupId })
+      .select('id')
+      .single();
+    if (inviteError) throw inviteError;
+
+    const content = emailContent[language as keyof typeof emailContent] ?? emailContent.pt;
+    const inviteUrl = `${appUrl}?inviteId=${encodeURIComponent(invite.id)}`;
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      body: JSON.stringify({
+        from: resendFromEmail,
+        html: `<h1>${content.title}</h1><p>${content.body}</p><p><a href="${inviteUrl}">${content.cta}</a></p>`,
+        subject: content.title,
+        to: [email.trim().toLowerCase()],
+      }),
+      headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
+      method: 'POST',
+    });
+
+    if (!emailResponse.ok) {
+      await adminClient.from('group_invites').delete().eq('id', invite.id);
+      throw new Error('Unable to send invitation email');
+    }
+
+    return Response.json({ inviteId: invite.id });
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 400 },
+    );
+  }
+});

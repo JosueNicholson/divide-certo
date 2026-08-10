@@ -18,6 +18,22 @@ Supabase hospedado que será usado pelo aplicativo.
 7. Em Authentication > URL Configuration, adicione
    `dividecerto://auth/callback` às Redirect URLs permitidas.
 
+## Convites por e-mail
+
+O envio usa a Edge Function `send-group-invite` e o Resend. Configure os
+segredos no projeto Supabase, sem prefixo `EXPO_PUBLIC_`:
+
+```text
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+APP_URL=dividecerto://invite
+```
+
+Em seguida, publique a função com
+`supabase functions deploy send-group-invite`. O Supabase fornece
+automaticamente `SUPABASE_URL`, `SUPABASE_ANON_KEY` e
+`SUPABASE_SERVICE_ROLE_KEY` no ambiente da função.
+
 O login Google em iOS e Android exige um build de desenvolvimento ou de
 produção, pois ele precisa registrar o esquema `dividecerto` no sistema. O
 Expo Go não registra esse esquema.
