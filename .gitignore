@@ -8,3 +8,4 @@ npm-debug.*
 .env
 .env.local
 plans/
+supabase/.temp/
