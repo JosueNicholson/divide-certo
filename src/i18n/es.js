@@ -117,5 +117,17 @@ export default {
   invitationPending: 'Esperando aceptación',
   inviteCreateErrorTitle: 'No fue posible crear la invitación',
   inviteCreateError: 'Inténtalo de nuevo en unos momentos.',
+  inviteAlreadyPending:
+    'Esta persona ya tiene una invitación pendiente. Reenvía o cancela la invitación actual.',
+  resendInvite: 'Reenviar invitación',
+  inviteResentTitle: 'Invitación reenviada',
+  inviteResent: 'La invitación se envió de nuevo y es válida durante otros 7 días.',
+  inviteResendErrorTitle: 'No fue posible reenviar la invitación',
+  inviteResendError: 'Inténtalo de nuevo en unos momentos.',
+  cancelInvite: 'Cancelar invitación',
+  cancelInviteTitle: '¿Cancelar esta invitación?',
+  cancelInviteMessage: 'La persona ya no podrá usar este enlace para unirse al grupo.',
+  cancelInviteErrorTitle: 'No fue posible cancelar la invitación',
+  cancelInviteError: 'Inténtalo de nuevo en unos momentos.',
   close: 'Cerrar',
 };

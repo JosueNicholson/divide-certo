@@ -117,5 +117,17 @@ export default {
   invitationPending: 'Aguardando aceite',
   inviteCreateErrorTitle: 'Não foi possível criar o convite',
   inviteCreateError: 'Tente novamente em alguns instantes.',
+  inviteAlreadyPending:
+    'Esta pessoa já tem um convite pendente. Reenvie ou cancele o convite atual.',
+  resendInvite: 'Reenviar convite',
+  inviteResentTitle: 'Convite reenviado',
+  inviteResent: 'O convite foi enviado novamente e continua válido por mais 7 dias.',
+  inviteResendErrorTitle: 'Não foi possível reenviar o convite',
+  inviteResendError: 'Tente novamente em alguns instantes.',
+  cancelInvite: 'Cancelar convite',
+  cancelInviteTitle: 'Cancelar este convite?',
+  cancelInviteMessage: 'A pessoa não poderá mais usar este link para entrar no grupo.',
+  cancelInviteErrorTitle: 'Não foi possível cancelar o convite',
+  cancelInviteError: 'Tente novamente em alguns instantes.',
   close: 'Fechar',
 };

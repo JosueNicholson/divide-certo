@@ -120,5 +120,17 @@ export default {
   invitationPending: 'En attente d’acceptation',
   inviteCreateErrorTitle: 'Impossible de créer l’invitation',
   inviteCreateError: 'Réessayez dans quelques instants.',
+  inviteAlreadyPending:
+    'Cette personne a déjà une invitation en attente. Renvoyez ou annulez l’invitation actuelle.',
+  resendInvite: 'Renvoyer l’invitation',
+  inviteResentTitle: 'Invitation renvoyée',
+  inviteResent: 'L’invitation a été renvoyée et reste valide pendant 7 jours supplémentaires.',
+  inviteResendErrorTitle: 'Impossible de renvoyer l’invitation',
+  inviteResendError: 'Réessayez dans quelques instants.',
+  cancelInvite: 'Annuler l’invitation',
+  cancelInviteTitle: 'Annuler cette invitation ?',
+  cancelInviteMessage: 'La personne ne pourra plus utiliser ce lien pour rejoindre le groupe.',
+  cancelInviteErrorTitle: 'Impossible d’annuler l’invitation',
+  cancelInviteError: 'Réessayez dans quelques instants.',
   close: 'Fermer',
 };

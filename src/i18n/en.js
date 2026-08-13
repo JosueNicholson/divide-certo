@@ -114,5 +114,17 @@ export default {
   invitationPending: 'Waiting for acceptance',
   inviteCreateErrorTitle: 'Unable to create the invitation',
   inviteCreateError: 'Please try again in a few moments.',
+  inviteAlreadyPending:
+    'This person already has a pending invitation. Resend or cancel the current invitation.',
+  resendInvite: 'Resend invitation',
+  inviteResentTitle: 'Invitation resent',
+  inviteResent: 'The invitation was sent again and is valid for another 7 days.',
+  inviteResendErrorTitle: 'Unable to resend the invitation',
+  inviteResendError: 'Please try again in a few moments.',
+  cancelInvite: 'Cancel invitation',
+  cancelInviteTitle: 'Cancel this invitation?',
+  cancelInviteMessage: 'The person will no longer be able to use this link to join the group.',
+  cancelInviteErrorTitle: 'Unable to cancel the invitation',
+  cancelInviteError: 'Please try again in a few moments.',
   close: 'Close',
 };

@@ -211,6 +211,22 @@ export const createGroupInvite = async (groupId, email, language) => {
   }
 };
 
+export const resendGroupInvite = async (groupId, inviteId, language) => {
+  const { error } = await supabase.functions.invoke('send-group-invite', {
+    body: { groupId, inviteId, language },
+  });
+  if (error) throw error;
+};
+
+export const revokeGroupInvite = async (inviteId) => {
+  const { error } = await supabase
+    .from('group_invites')
+    .update({ status: 'revoked' })
+    .eq('id', inviteId)
+    .eq('status', 'pending');
+  if (error) throw error;
+};
+
 export const acceptGroupInvite = async (inviteId) => {
   const { error } = await supabase.rpc('accept_group_invitation', { invitation_id: inviteId });
   if (error) throw error;

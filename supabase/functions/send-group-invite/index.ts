@@ -28,7 +28,7 @@ Deno.serve(async (request) => {
     const authorization = request.headers.get('Authorization');
     if (!authorization) throw new Error('Unauthorized');
 
-    const { email, groupId, language = 'pt' } = await request.json();
+    const { email, groupId, inviteId, language = 'pt' } = await request.json();
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -57,12 +57,24 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (membershipError || !membership) throw new Error('Forbidden');
 
-    const { data: invite, error: inviteError } = await userClient
-      .from('group_invites')
-      .insert({ created_by: user.id, email: email.trim().toLowerCase(), group_id: groupId })
-      .select('id')
-      .single();
-    if (inviteError) throw inviteError;
+    const { data: invite, error: inviteError } = inviteId
+      ? await userClient
+          .from('group_invites')
+          .update({ expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
+          .eq('id', inviteId)
+          .eq('group_id', groupId)
+          .eq('status', 'pending')
+          .select('id, email')
+          .single()
+      : await userClient
+          .from('group_invites')
+          .insert({ created_by: user.id, email: email.trim().toLowerCase(), group_id: groupId })
+          .select('id, email')
+          .single();
+    if (inviteError) {
+      if (inviteError.code === '23505') throw new Error('A pending invitation already exists');
+      throw inviteError;
+    }
 
     const content = emailContent[language as keyof typeof emailContent] ?? emailContent.pt;
     const inviteUrl = `${appUrl}?inviteId=${encodeURIComponent(invite.id)}`;
@@ -72,14 +84,14 @@ Deno.serve(async (request) => {
         html: `<h1>${content.title}</h1><p>${content.body}</p><p><a href="${inviteUrl}">${content.cta}</a></p>`,
         subject: content.title,
         text: `${content.title}\n\n${content.body}\n\n${inviteUrl}`,
-        to: [email.trim().toLowerCase()],
+        to: [invite.email],
       }),
       headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
       method: 'POST',
     });
 
     if (!emailResponse.ok) {
-      await userClient.from('group_invites').delete().eq('id', invite.id);
+      if (!inviteId) await userClient.from('group_invites').delete().eq('id', invite.id);
       throw new Error(`Resend error: ${await emailResponse.text()}`);
     }
 
