@@ -25,6 +25,7 @@ export default function App() {
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [groupMembers, setGroupMembers] = useState([]);
   const [selectedBillId, setSelectedBillId] = useState(null);
+  const [groupsRefreshKey, setGroupsRefreshKey] = useState(0);
   const [names, setNames] = useState(['Ana', 'Bruno', 'Carla']);
   const [splitType, setSplitType] = useState('equal');
   const [language, setLanguage] = useState(getSystemLanguage);
@@ -59,6 +60,7 @@ export default function App() {
     acceptGroupInvite(pendingInviteId)
       .then(() => {
         setPendingInviteId(null);
+        setGroupsRefreshKey((currentKey) => currentKey + 1);
         setScreen('groups');
         Alert.alert(t.inviteAcceptedTitle, t.inviteAccepted);
       })
@@ -182,6 +184,7 @@ export default function App() {
   } else if (screen === 'groups') {
     content = (
       <GroupsScreen
+        key={groupsRefreshKey}
         t={t}
         onOpenGroup={(groupId) => {
           setSelectedGroupId(groupId);
