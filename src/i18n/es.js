@@ -129,5 +129,7 @@ export default {
   cancelInviteMessage: 'La persona ya no podrá usar este enlace para unirse al grupo.',
   cancelInviteErrorTitle: 'No fue posible cancelar la invitación',
   cancelInviteError: 'Inténtalo de nuevo en unos momentos.',
+  resendingInvite: 'Reenviando invitación…',
+  cancelingInvite: 'Cancelando invitación…',
   close: 'Cerrar',
 };

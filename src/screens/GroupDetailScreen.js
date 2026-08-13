@@ -39,7 +39,7 @@ export default function GroupDetailScreen({
   const [inviteEmail, setInviteEmail] = useState('');
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [pendingInviteActionId, setPendingInviteActionId] = useState(null);
+  const [pendingInviteAction, setPendingInviteAction] = useState(null);
 
   const loadDetails = useCallback(
     async (isManualRefresh = false) => {
@@ -97,16 +97,15 @@ export default function GroupDetailScreen({
   };
 
   const handleResendInvite = async (inviteId) => {
-    setPendingInviteActionId(inviteId);
+    setPendingInviteAction({ inviteId, type: 'resend' });
     try {
       await resendGroupInvite(groupId, inviteId, language);
       Alert.alert(t.inviteResentTitle, t.inviteResent);
-      await loadDetails();
     } catch (error) {
       console.error('Failed to resend group invite:', error);
       Alert.alert(t.inviteResendErrorTitle, t.inviteResendError);
     } finally {
-      setPendingInviteActionId(null);
+      setPendingInviteAction(null);
     }
   };
 
@@ -117,15 +116,18 @@ export default function GroupDetailScreen({
         style: 'destructive',
         text: t.cancelInvite,
         onPress: async () => {
-          setPendingInviteActionId(inviteId);
+          setPendingInviteAction({ inviteId, type: 'cancel' });
           try {
             await revokeGroupInvite(inviteId);
-            await loadDetails();
+            setDetails((currentDetails) => ({
+              ...currentDetails,
+              invites: currentDetails.invites.filter((invite) => invite.id !== inviteId),
+            }));
           } catch (error) {
             console.error('Failed to cancel group invite:', error);
             Alert.alert(t.cancelInviteErrorTitle, t.cancelInviteError);
           } finally {
-            setPendingInviteActionId(null);
+            setPendingInviteAction(null);
           }
         },
       },
@@ -219,31 +221,36 @@ export default function GroupDetailScreen({
                     <View className="mt-3 rounded-2xl bg-[#E9EEEA] px-4 py-3" key={invite.id}>
                       <Text className="text-sm font-bold text-[#31564B]">{invite.email}</Text>
                       <Text className="mt-1 text-xs text-[#71807A]">{t.invitationPending}</Text>
-                      <View className="mt-3 flex-row">
-                        <Pressable
-                          accessibilityLabel={`${t.resendInvite}: ${invite.email}`}
-                          className="mr-4"
-                          disabled={Boolean(pendingInviteActionId)}
-                          onPress={() => handleResendInvite(invite.id)}
-                        >
-                          {pendingInviteActionId === invite.id ? (
-                            <ActivityIndicator color="#31564B" size="small" />
-                          ) : (
+                      {pendingInviteAction?.inviteId === invite.id ? (
+                        <View className="mt-3 flex-row items-center">
+                          <ActivityIndicator color="#31564B" size="small" />
+                          <Text className="ml-2 text-xs font-semibold text-[#31564B]">
+                            {pendingInviteAction.type === 'cancel'
+                              ? t.cancelingInvite
+                              : t.resendingInvite}
+                          </Text>
+                        </View>
+                      ) : (
+                        <View className="mt-3 flex-row">
+                          <Pressable
+                            accessibilityLabel={`${t.resendInvite}: ${invite.email}`}
+                            className="mr-4"
+                            onPress={() => handleResendInvite(invite.id)}
+                          >
                             <Text className="text-xs font-extrabold text-[#31564B]">
                               {t.resendInvite}
                             </Text>
-                          )}
-                        </Pressable>
-                        <Pressable
-                          accessibilityLabel={`${t.cancelInvite}: ${invite.email}`}
-                          disabled={Boolean(pendingInviteActionId)}
-                          onPress={() => handleCancelInvite(invite.id)}
-                        >
-                          <Text className="text-xs font-extrabold text-[#A83E32]">
-                            {t.cancelInvite}
-                          </Text>
-                        </Pressable>
-                      </View>
+                          </Pressable>
+                          <Pressable
+                            accessibilityLabel={`${t.cancelInvite}: ${invite.email}`}
+                            onPress={() => handleCancelInvite(invite.id)}
+                          >
+                            <Text className="text-xs font-extrabold text-[#A83E32]">
+                              {t.cancelInvite}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      )}
                     </View>
                   ))}
                 </View>
