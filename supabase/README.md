@@ -26,11 +26,18 @@ segredos no projeto Supabase, sem prefixo `EXPO_PUBLIC_`:
 ```text
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
-APP_URL=dividecerto://invite
 ```
 
-Em seguida, publique a função com
-`supabase functions deploy send-group-invite`. O Supabase fornece
+Em seguida, publique as funções com:
+
+```bash
+supabase functions deploy send-group-invite
+supabase functions deploy open-group-invite --no-verify-jwt
+```
+
+`open-group-invite` é uma URL HTTPS pública usada no e-mail. Ela apenas
+redireciona ao deep link do aplicativo; o aceite em si continua protegido pela
+sessão autenticada e pelo e-mail do convite na função SQL do Supabase. O Supabase fornece
 automaticamente `SUPABASE_URL` e `SUPABASE_ANON_KEY` no ambiente da função.
 
 O login Google em iOS e Android exige um build de desenvolvimento ou de

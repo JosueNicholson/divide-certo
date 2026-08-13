@@ -33,9 +33,8 @@ Deno.serve(async (request) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     const resendFromEmail = Deno.env.get('RESEND_FROM_EMAIL');
-    const appUrl = Deno.env.get('APP_URL');
 
-    if (!supabaseUrl || !supabaseAnonKey || !resendApiKey || !resendFromEmail || !appUrl) {
+    if (!supabaseUrl || !supabaseAnonKey || !resendApiKey || !resendFromEmail) {
       throw new Error('Server configuration is incomplete');
     }
 
@@ -77,7 +76,7 @@ Deno.serve(async (request) => {
     }
 
     const content = emailContent[language as keyof typeof emailContent] ?? emailContent.pt;
-    const inviteUrl = `${appUrl}?inviteId=${encodeURIComponent(invite.id)}`;
+    const inviteUrl = `${supabaseUrl}/functions/v1/open-group-invite?inviteId=${encodeURIComponent(invite.id)}`;
     const emailResponse = await fetch('https://api.resend.com/emails', {
       body: JSON.stringify({
         from: resendFromEmail,
