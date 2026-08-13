@@ -30,6 +30,7 @@ export default function CreateBillScreen({
   const [selectedUserIds, setSelectedUserIds] = useState(() =>
     members.map((member) => member.user_id),
   );
+  const [payerUserId, setPayerUserId] = useState(() => members[0]?.user_id ?? null);
   const [splitType, setSplitType] = useState('equal');
   const [participantDetails, setParticipantDetails] = useState({});
   const [isSplitSelectOpen, setIsSplitSelectOpen] = useState(false);
@@ -75,11 +76,17 @@ export default function CreateBillScreen({
             : null;
 
   const toggleParticipant = (userId) => {
-    setSelectedUserIds((currentIds) =>
-      currentIds.includes(userId)
+    setSelectedUserIds((currentIds) => {
+      const isSelected = currentIds.includes(userId);
+      const nextIds = isSelected
         ? currentIds.filter((currentId) => currentId !== userId)
-        : [...currentIds, userId],
-    );
+        : [...currentIds, userId];
+      setPayerUserId((currentPayerUserId) => {
+        if (!isSelected || currentPayerUserId !== userId) return currentPayerUserId;
+        return nextIds[0] ?? null;
+      });
+      return nextIds;
+    });
   };
 
   const updateParticipantDetail = (userId, value) => {
@@ -95,6 +102,7 @@ export default function CreateBillScreen({
         setAmount(formatCents(String(bill.total_cents), 9));
         setSplitType(bill.split_type);
         setSelectedUserIds(bill.bill_participants.map((participant) => participant.user_id));
+        setPayerUserId(bill.paid_by || bill.bill_participants[0]?.user_id || null);
         setParticipantDetails(
           Object.fromEntries(
             bill.bill_participants.map((participant) => [
@@ -125,6 +133,10 @@ export default function CreateBillScreen({
       Alert.alert(t.billParticipantsRequiredTitle, t.billParticipantsRequired);
       return;
     }
+    if (!payerUserId) {
+      Alert.alert(t.billPayerRequiredTitle, t.billPayerRequired);
+      return;
+    }
     if (validation?.type === 'error') {
       Alert.alert(t.billSplitInvalidTitle, validation.message);
       return;
@@ -136,6 +148,7 @@ export default function CreateBillScreen({
         description,
         groupId,
         name,
+        payerUserId,
         splitType,
         totalCents,
         participants: selectedUserIds.map((userId) => ({
@@ -325,6 +338,41 @@ export default function CreateBillScreen({
                   }
                 >
                   {isSelected && <Text className="text-sm font-black text-[#F3F78D]">✓</Text>}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text className="mb-2 mt-7 text-[11px] font-extrabold tracking-[1.2px] text-[#75847F]">
+          {t.billPayer}
+        </Text>
+        <Text className="mb-3 text-sm leading-5 text-[#71807A]">{t.billPayerDescription}</Text>
+        <View className="overflow-hidden rounded-2xl bg-white">
+          {selectedMembers.map((member) => {
+            const isPayer = payerUserId === member.user_id;
+            return (
+              <Pressable
+                accessibilityLabel={`${t.selectBillPayer}: ${member.profiles.display_name}`}
+                className="min-h-[58px] flex-row items-center border-b border-[#EDF0ED] px-4"
+                key={member.user_id}
+                onPress={() => setPayerUserId(member.user_id)}
+              >
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#DDE9D8]">
+                  <Text className="text-sm font-extrabold text-[#31564B]">
+                    {member.profiles.display_name.trim().charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <Text className="ml-3 flex-1 text-base font-bold text-[#1E3D35]">
+                  {member.profiles.display_name}
+                </Text>
+                <View
+                  className={
+                    isPayer
+                      ? 'h-6 w-6 items-center justify-center rounded-full bg-[#1E3D35]'
+                      : 'h-6 w-6 rounded-full border-2 border-[#B8C4BE]'
+                  }
+                >
+                  {isPayer && <View className="h-2.5 w-2.5 rounded-full bg-[#F3F78D]" />}
                 </View>
               </Pressable>
             );

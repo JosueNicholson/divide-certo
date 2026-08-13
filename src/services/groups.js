@@ -54,7 +54,9 @@ export const getGroupDetails = async (groupId) => {
 
   const { data: bills, error: billsError } = await supabase
     .from('bills')
-    .select('id, name, description, total_cents, currency_code, split_type, created_at, created_by')
+    .select(
+      'id, name, description, total_cents, currency_code, split_type, created_at, created_by, paid_by',
+    )
     .eq('group_id', groupId)
     .order('created_at', { ascending: false });
 
@@ -84,7 +86,7 @@ export const getBillDetails = async (billId) => {
   const { data, error } = await supabase
     .from('bills')
     .select(
-      'id, name, description, total_cents, split_type, bill_participants(user_id, percentage_basis_points, amount_cents)',
+      'id, name, description, total_cents, split_type, paid_by, bill_participants(user_id, percentage_basis_points, amount_cents)',
     )
     .eq('id', billId)
     .single();
@@ -96,6 +98,7 @@ export const createBill = async ({
   groupId,
   name,
   description,
+  payerUserId,
   totalCents,
   splitType,
   participants,
@@ -149,6 +152,16 @@ export const createBill = async ({
     throw participantsError;
   }
 
+  const { error: payerError } = await supabase
+    .from('bills')
+    .update({ paid_by: payerUserId })
+    .eq('id', bill.id);
+  if (payerError) {
+    const { error: deleteError } = await supabase.from('bills').delete().eq('id', bill.id);
+    if (deleteError) console.error('Failed to remove bill without payer:', deleteError);
+    throw payerError;
+  }
+
   return bill;
 };
 
@@ -156,26 +169,28 @@ export const updateBill = async ({
   billId,
   description,
   name,
+  payerUserId,
   participants,
   splitType,
   totalCents,
 }) => {
-  const { error: deleteParticipantsError } = await supabase
-    .from('bill_participants')
-    .delete()
-    .eq('bill_id', billId);
-  if (deleteParticipantsError) throw deleteParticipantsError;
-
   const { error: billError } = await supabase
     .from('bills')
     .update({
       description: description.trim() || null,
       name: name.trim(),
+      paid_by: null,
       split_type: splitType,
       total_cents: totalCents,
     })
     .eq('id', billId);
   if (billError) throw billError;
+
+  const { error: deleteParticipantsError } = await supabase
+    .from('bill_participants')
+    .delete()
+    .eq('bill_id', billId);
+  if (deleteParticipantsError) throw deleteParticipantsError;
 
   const rows = participants.map(({ amountCents, percentageBasisPoints, userId }) => ({
     bill_id: billId,
@@ -185,6 +200,12 @@ export const updateBill = async ({
   }));
   const { error: participantsError } = await supabase.from('bill_participants').insert(rows);
   if (participantsError) throw participantsError;
+
+  const { error: payerError } = await supabase
+    .from('bills')
+    .update({ paid_by: payerUserId })
+    .eq('id', billId);
+  if (payerError) throw payerError;
 };
 
 export const deleteBill = async (billId) => {
