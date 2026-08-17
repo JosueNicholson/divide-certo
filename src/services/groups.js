@@ -55,7 +55,7 @@ export const getGroupDetails = async (groupId) => {
   const { data: bills, error: billsError } = await supabase
     .from('bills')
     .select(
-      'id, name, description, total_cents, currency_code, split_type, created_at, created_by, paid_by',
+      'id, name, description, total_cents, currency_code, split_type, created_at, created_by, paid_by, bill_participants(user_id, percentage_basis_points, amount_cents)',
     )
     .eq('group_id', groupId)
     .order('created_at', { ascending: false });
@@ -74,7 +74,13 @@ export const getGroupDetails = async (groupId) => {
 
   if (invitesError) throw invitesError;
   return {
-    bills: bills.map((bill) => ({ ...bill, canManage: isAdmin || bill.created_by === user?.id })),
+    bills: bills.map((bill) => ({
+      ...bill,
+      participants: bill.bill_participants ?? [],
+      canManage: isAdmin || bill.created_by === user?.id,
+      paid_by: bill.paid_by || bill.created_by,
+    })),
+    currentUserId: user?.id,
     group,
     invites,
     isAdmin,

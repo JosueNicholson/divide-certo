@@ -137,7 +137,7 @@ export default function CreateBillScreen({
       Alert.alert(t.billPayerRequiredTitle, t.billPayerRequired);
       return;
     }
-    if (validation?.type === 'error') {
+    if (validation) {
       Alert.alert(t.billSplitInvalidTitle, validation.message);
       return;
     }

@@ -24,6 +24,7 @@ import {
   revokeGroupInvite,
 } from '../services/groups';
 import { money } from '../utils/currency';
+import { calculateGroupBalance } from '../utils/balance';
 
 export default function GroupDetailScreen({
   groupId,
@@ -40,6 +41,34 @@ export default function GroupDetailScreen({
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [pendingInviteAction, setPendingInviteAction] = useState(null);
+  const groupBalance = details ? calculateGroupBalance(details.bills, details.currentUserId) : 0;
+  const balancePresentation =
+    groupBalance > 0
+      ? {
+          amount: money(groupBalance / 100, getLocale(language)),
+          cardClassName: 'bg-[#1E3D35]',
+          label: t.groupBalanceDetails,
+          labelClassName: 'text-[#DDE9D8]',
+          amountClassName: 'text-[#F3F78D]',
+          messageClassName: 'text-white',
+        }
+      : groupBalance < 0
+        ? {
+            amount: `-${money(Math.abs(groupBalance) / 100, getLocale(language))}`,
+            cardClassName: 'bg-[#FDE8E4]',
+            label: t.groupBalanceDetails,
+            labelClassName: 'text-[#8C352C]',
+            amountClassName: 'text-[#A83E32]',
+            messageClassName: 'text-[#8C352C]',
+          }
+        : {
+            amount: money(0, getLocale(language)),
+            cardClassName: 'bg-[#E6F1F8]',
+            label: t.groupBalanceSettled,
+            labelClassName: 'text-[#356C86]',
+            amountClassName: 'text-[#1D5774]',
+            messageClassName: 'text-[#245A73]',
+          };
 
   const loadDetails = useCallback(
     async (isManualRefresh = false) => {
@@ -169,6 +198,23 @@ export default function GroupDetailScreen({
               <Text className="mt-4 text-base leading-6 text-[#526760]">
                 {t.groupDetailDescription}
               </Text>
+              <View className={`mt-6 rounded-3xl px-5 py-5 ${balancePresentation.cardClassName}`}>
+                <Text
+                  className={`text-[11px] font-extrabold tracking-[1.2px] ${balancePresentation.labelClassName}`}
+                >
+                  {t.groupBalance}
+                </Text>
+                <Text
+                  className={`mt-2 text-[28px] font-extrabold tracking-[-1px] ${balancePresentation.amountClassName}`}
+                >
+                  {balancePresentation.amount}
+                </Text>
+                <Text
+                  className={`mt-1 text-sm font-semibold ${balancePresentation.messageClassName}`}
+                >
+                  {balancePresentation.label}
+                </Text>
+              </View>
               <Pressable
                 accessibilityLabel={t.createBill}
                 className="mt-6 h-[54px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
