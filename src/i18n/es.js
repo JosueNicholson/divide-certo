@@ -34,6 +34,7 @@ export default {
   languageDescription: 'Elige el idioma de la aplicación',
   appSettings: 'Configuración',
   languageSystem: 'El idioma inicial sigue el sistema operativo.',
+  appVersion: (version) => `Versión ${version}`,
   signInTitle: 'Tus cuentas,{line}en grupo.',
   signInDescription: 'Inicia sesión para crear grupos y dividir cuentas con tus amigos.',
   continueWithGoogle: 'Continuar con Google',

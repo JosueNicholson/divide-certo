@@ -33,6 +33,7 @@ export default {
   languageDescription: 'Choose the app language',
   appSettings: 'Settings',
   languageSystem: 'The initial language follows your operating system.',
+  appVersion: (version) => `Version ${version}`,
   signInTitle: 'Your bills,{line}together.',
   signInDescription: 'Sign in to create groups and split bills with your friends.',
   continueWithGoogle: 'Continue with Google',

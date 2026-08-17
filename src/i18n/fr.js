@@ -34,6 +34,7 @@ export default {
   languageDescription: 'Choisissez la langue de l’application',
   appSettings: 'Paramètres',
   languageSystem: 'La langue initiale suit le système d’exploitation.',
+  appVersion: (version) => `Version ${version}`,
   signInTitle: 'Vos additions,{line}à plusieurs.',
   signInDescription:
     'Connectez-vous pour créer des groupes et partager des additions avec vos amis.',
