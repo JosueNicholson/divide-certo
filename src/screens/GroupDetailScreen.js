@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import GroupBalanceDetailsModal from '../components/GroupBalanceDetailsModal';
 import { getLocale } from '../i18n';
 import {
   createGroupInvite,
@@ -24,7 +25,11 @@ import {
   revokeGroupInvite,
 } from '../services/groups';
 import { money } from '../utils/currency';
-import { calculateGroupBalance } from '../utils/balance';
+import {
+  calculateBillBalances,
+  calculateGroupBalance,
+  calculateParticipantShares,
+} from '../utils/balance';
 
 export default function GroupDetailScreen({
   groupId,
@@ -41,7 +46,27 @@ export default function GroupDetailScreen({
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [pendingInviteAction, setPendingInviteAction] = useState(null);
+  const [isBalanceDetailsOpen, setIsBalanceDetailsOpen] = useState(false);
   const groupBalance = details ? calculateGroupBalance(details.bills, details.currentUserId) : 0;
+  const balanceBills = details
+    ? details.bills
+        .filter((bill) =>
+          bill.participants.some(({ user_id }) => user_id === details.currentUserId),
+        )
+        .map((bill) => ({
+          ...bill,
+          userBalance: calculateBillBalances(bill)[details.currentUserId] ?? 0,
+          userShare: calculateParticipantShares(bill)[details.currentUserId] ?? 0,
+        }))
+    : [];
+  const memberNames = details
+    ? Object.fromEntries(
+        details.members.map((member) => [
+          member.user_id,
+          member.profiles.display_name || member.profiles.email,
+        ]),
+      )
+    : {};
   const balancePresentation =
     groupBalance > 0
       ? {
@@ -198,7 +223,11 @@ export default function GroupDetailScreen({
               <Text className="mt-4 text-base leading-6 text-[#526760]">
                 {t.groupDetailDescription}
               </Text>
-              <View className={`mt-6 rounded-3xl px-5 py-5 ${balancePresentation.cardClassName}`}>
+              <Pressable
+                accessibilityLabel={t.openGroupBalanceDetails}
+                className={`mt-6 rounded-3xl px-5 py-5 active:opacity-80 ${balancePresentation.cardClassName}`}
+                onPress={() => setIsBalanceDetailsOpen(true)}
+              >
                 <Text
                   className={`text-[11px] font-extrabold tracking-[1.2px] ${balancePresentation.labelClassName}`}
                 >
@@ -214,7 +243,7 @@ export default function GroupDetailScreen({
                 >
                   {balancePresentation.label}
                 </Text>
-              </View>
+              </Pressable>
               <Pressable
                 accessibilityLabel={t.createBill}
                 className="mt-6 h-[54px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
@@ -393,6 +422,15 @@ export default function GroupDetailScreen({
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
+      <GroupBalanceDetailsModal
+        balance={groupBalance}
+        bills={balanceBills}
+        locale={getLocale(language)}
+        memberNames={memberNames}
+        onClose={() => setIsBalanceDetailsOpen(false)}
+        t={t}
+        visible={isBalanceDetailsOpen}
+      />
     </SafeAreaView>
   );
 }
