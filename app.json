@@ -2,14 +2,11 @@
   "expo": {
     "name": "Divide Certo",
     "slug": "divide-certo",
+    "icon": "./assets/images/divide-certo-logo.png",
     "scheme": "dividecerto",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#F7F7F3"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.divide-certo"
@@ -28,6 +25,15 @@
           "ios": {
             "buildReactNativeFromSource": true
           }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/divide-certo-logo.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F7F3"
         }
       ],
       "./plugins/with-fmt-cxx17"

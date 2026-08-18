@@ -9,6 +9,7 @@
 ## Desenvolvimento e builds nativos
 
 - Após alterar `app.json`, reinicie o Metro antes de testar no dispositivo, por exemplo com `npm run start:device`.
+- Alterações no ícone do app ou na splash screen exigem um novo build nativo para serem exibidas no dispositivo.
 - Mudanças em telas, componentes, traduções e estilos não exigem reinstalar Pods.
 - Após instalar, remover ou atualizar dependências com código iOS, execute `pod install` em `ios/` antes de compilar no Xcode.
 - Para uma versão de distribuição instalada (APK/IPA/loja), gere e instale ou publique um novo build.
