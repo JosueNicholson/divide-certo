@@ -372,7 +372,7 @@ export default function GroupDetailScreen({
         onRequestClose={closeInviteModal}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1 bg-black/35"
         >
           <ScrollView
