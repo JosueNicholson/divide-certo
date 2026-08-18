@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, BackHandler, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 import AuthScreen from './src/screens/AuthScreen';
@@ -95,6 +95,37 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== 'android') return undefined;
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (screen === 'groupDetail') {
+        setSelectedGroupId(null);
+        setScreen('groups');
+        return true;
+      }
+
+      if (screen === 'createBill' || screen === 'editBill') {
+        setScreen('groupDetail');
+        return true;
+      }
+
+      if (screen === 'customize') {
+        setScreen('groups');
+        return true;
+      }
+
+      if (screen === 'settings') {
+        setScreen(session ? 'groups' : 'auth');
+        return true;
+      }
+
+      return false;
+    });
+
+    return () => subscription.remove();
+  }, [screen, session]);
+
   const changeLanguage = (nextLanguage) => {
     setLanguage(nextLanguage);
     AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
@@ -149,7 +180,10 @@ export default function App() {
       <GroupDetailScreen
         groupId={selectedGroupId}
         language={language}
-        onBack={() => setScreen('groups')}
+        onBack={() => {
+          setSelectedGroupId(null);
+          setScreen('groups');
+        }}
         onCreateBill={(members) => {
           setGroupMembers(members);
           setScreen('createBill');
