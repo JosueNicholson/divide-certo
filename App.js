@@ -1,19 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, BackHandler, Platform } from 'react-native';
+import { BackHandler, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 import AuthScreen from './src/screens/AuthScreen';
 import GroupsScreen from './src/screens/GroupsScreen';
 import GroupDetailScreen from './src/screens/GroupDetailScreen';
+import InvitationsScreen from './src/screens/InvitationsScreen';
 import CreateBillScreen from './src/screens/CreateBillScreen';
 import { getSystemLanguage, getLocale, translations } from './src/i18n';
 import HomeScreen from './src/screens/HomeScreen';
 import CustomizeScreen from './src/screens/CustomizeScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { isSupabaseConfigured, supabase } from './src/services/supabase';
-import { acceptGroupInvite } from './src/services/groups';
 import { parseBrazilianNumber } from './src/utils/formatters';
 
 const LANGUAGE_STORAGE_KEY = '@divide-certo:language';
@@ -30,7 +30,7 @@ export default function App() {
   const [splitType, setSplitType] = useState('equal');
   const [language, setLanguage] = useState(getSystemLanguage);
   const [session, setSession] = useState(null);
-  const [pendingInviteId, setPendingInviteId] = useState(null);
+  const [pendingInvite, setPendingInvite] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(isSupabaseConfigured);
   const t = translations[language];
   const locale = getLocale(language);
@@ -43,8 +43,11 @@ export default function App() {
 
   useEffect(() => {
     const setInviteFromUrl = (url) => {
-      const inviteId = Linking.parse(url).queryParams?.inviteId;
-      if (typeof inviteId === 'string') setPendingInviteId(inviteId);
+      const queryParams = Linking.parse(url).queryParams;
+      const inviteId = queryParams?.inviteId;
+      const token = queryParams?.token;
+      if (typeof inviteId === 'string') setPendingInvite({ inviteId, type: 'email' });
+      if (typeof token === 'string') setPendingInvite({ token, type: 'link' });
     };
 
     Linking.getInitialURL().then((url) => {
@@ -55,27 +58,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!session || !pendingInviteId) return;
-
-    acceptGroupInvite(pendingInviteId)
-      .then(() => {
-        setPendingInviteId(null);
-        setGroupsRefreshKey((currentKey) => currentKey + 1);
-        setScreen('groups');
-        Alert.alert(t.inviteAcceptedTitle, t.inviteAccepted);
-      })
-      .catch(() => {
-        setPendingInviteId(null);
-        Alert.alert(t.inviteAcceptErrorTitle, t.inviteAcceptError);
-      });
-  }, [
-    pendingInviteId,
-    session,
-    t.inviteAcceptError,
-    t.inviteAcceptErrorTitle,
-    t.inviteAccepted,
-    t.inviteAcceptedTitle,
-  ]);
+    if (session && pendingInvite) setScreen('invitations');
+  }, [pendingInvite, session]);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -117,6 +101,12 @@ export default function App() {
 
       if (screen === 'settings') {
         setScreen(session ? 'groups' : 'auth');
+        return true;
+      }
+
+      if (screen === 'invitations') {
+        setPendingInvite(null);
+        setScreen('groups');
         return true;
       }
 
@@ -196,6 +186,22 @@ export default function App() {
         t={t}
       />
     );
+  } else if (screen === 'invitations' && session) {
+    content = (
+      <InvitationsScreen
+        invite={pendingInvite}
+        locale={locale}
+        onBack={() => {
+          setPendingInvite(null);
+          setScreen('groups');
+        }}
+        onFinished={() => {
+          setPendingInvite(null);
+          setGroupsRefreshKey((currentKey) => currentKey + 1);
+        }}
+        t={t}
+      />
+    );
   } else if (screen === 'settings') {
     content = (
       <SettingsScreen
@@ -210,9 +216,10 @@ export default function App() {
       <AuthScreen
         isLoading={isSessionLoading}
         isSupabaseConfigured={isSupabaseConfigured}
-        hasPendingInvite={Boolean(pendingInviteId)}
+        hasPendingInvite={Boolean(pendingInvite)}
         t={t}
         onOpenSettings={() => setScreen('settings')}
+        onOpenInvitations={() => setScreen('invitations')}
       />
     );
   } else if (screen === 'groups') {

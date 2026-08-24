@@ -17,15 +17,16 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createGroup, getGroups } from '../services/groups';
+import { createGroup, getGroups, getPendingGroupInvitations } from '../services/groups';
 
-export default function GroupsScreen({ onOpenGroup, onOpenSettings, t }) {
+export default function GroupsScreen({ onOpenGroup, onOpenInvitations, onOpenSettings, t }) {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
   const createModalTranslateY = useRef(new Animated.Value(360)).current;
 
   useEffect(() => {
@@ -59,6 +60,12 @@ export default function GroupsScreen({ onOpenGroup, onOpenSettings, t }) {
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
+
+  useEffect(() => {
+    getPendingGroupInvitations()
+      .then((invitations) => setPendingInvitesCount(invitations.length))
+      .catch((error) => console.error('Failed to load pending group invitations:', error));
+  }, []);
 
   const closeCreateModal = () => {
     if (isCreating) return;
@@ -128,6 +135,18 @@ export default function GroupsScreen({ onOpenGroup, onOpenSettings, t }) {
               <Text className="text-base font-extrabold text-[#F3F78D]">{t.createGroup}</Text>
               <Text className="text-[25px] font-normal text-[#F3F78D]">+</Text>
             </Pressable>
+            {pendingInvitesCount > 0 && (
+              <Pressable
+                accessibilityLabel={t.openInvitations}
+                className="mt-3 rounded-2xl bg-[#E9EEEA] px-5 py-4 active:opacity-80"
+                onPress={onOpenInvitations}
+              >
+                <Text className="text-sm font-extrabold text-[#31564B]">
+                  {t.pendingInvitationsNotice(pendingInvitesCount)}
+                </Text>
+                <Text className="mt-1 text-sm text-[#526760]">{t.pendingInvitationsAction}</Text>
+              </Pressable>
+            )}
           </View>
         }
         ListEmptyComponent={

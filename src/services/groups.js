@@ -73,6 +73,18 @@ export const getGroupDetails = async (groupId) => {
     : { data: [], error: null };
 
   if (invitesError) throw invitesError;
+  const { data: inviteLink, error: inviteLinkError } = isAdmin
+    ? await supabase
+        .from('group_invite_links')
+        .select('id, token, expires_at')
+        .eq('group_id', groupId)
+        .is('revoked_at', null)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .maybeSingle()
+    : { data: null, error: null };
+  if (inviteLinkError) throw inviteLinkError;
+
   return {
     bills: bills.map((bill) => ({
       ...bill,
@@ -83,6 +95,7 @@ export const getGroupDetails = async (groupId) => {
     currentUserId: user?.id,
     group,
     invites,
+    inviteLink,
     isAdmin,
     members,
   };
@@ -256,5 +269,61 @@ export const revokeGroupInvite = async (inviteId) => {
 
 export const acceptGroupInvite = async (inviteId) => {
   const { error } = await supabase.rpc('accept_group_invitation', { invitation_id: inviteId });
+  if (error) throw error;
+};
+
+export const getPendingGroupInvitations = async () => {
+  const { data, error } = await supabase
+    .from('group_invites')
+    .select('id, expires_at')
+    .eq('status', 'pending')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const previews = await Promise.all(
+    data.map(async (invite) => {
+      const { data: preview, error: previewError } = await supabase
+        .rpc('get_group_invitation_preview', { invitation_id: invite.id })
+        .maybeSingle();
+      if (previewError) throw previewError;
+      return preview;
+    }),
+  );
+  return previews.filter(Boolean);
+};
+
+export const getGroupInvitationPreview = async ({ inviteId, token, type }) => {
+  const functionName =
+    type === 'link' ? 'get_group_invite_link_preview' : 'get_group_invitation_preview';
+  const parameter = type === 'link' ? { invite_token: token } : { invitation_id: inviteId };
+  const { data, error } = await supabase.rpc(functionName, parameter).maybeSingle();
+  if (error) throw error;
+  return data;
+};
+
+export const declineGroupInvite = async (inviteId) => {
+  const { error } = await supabase.rpc('decline_group_invitation', { invitation_id: inviteId });
+  if (error) throw error;
+};
+
+export const acceptGroupInviteLink = async (token) => {
+  const { error } = await supabase.rpc('accept_group_invite_link', { invite_token: token });
+  if (error) throw error;
+};
+
+export const getOrCreateGroupInviteLink = async (groupId) => {
+  const { data, error } = await supabase
+    .rpc('create_group_invite_link', { target_group_id: groupId })
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const revokeGroupInviteLink = async (linkId) => {
+  const { error } = await supabase
+    .from('group_invite_links')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', linkId)
+    .is('revoked_at', null);
   if (error) throw error;
 };

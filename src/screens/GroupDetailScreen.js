@@ -12,6 +12,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   Text,
   TextInput,
   View,
@@ -21,10 +22,13 @@ import GroupBalanceDetailsModal from '../components/GroupBalanceDetailsModal';
 import { getLocale } from '../i18n';
 import {
   createGroupInvite,
+  getOrCreateGroupInviteLink,
   getGroupDetails,
   resendGroupInvite,
   revokeGroupInvite,
+  revokeGroupInviteLink,
 } from '../services/groups';
+import { supabaseUrl } from '../services/supabase';
 import { money } from '../utils/currency';
 import {
   calculateBillBalances,
@@ -48,6 +52,8 @@ export default function GroupDetailScreen({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [pendingInviteAction, setPendingInviteAction] = useState(null);
   const [isBalanceDetailsOpen, setIsBalanceDetailsOpen] = useState(false);
+  const [isSharingInviteLink, setIsSharingInviteLink] = useState(false);
+  const [isRevokingInviteLink, setIsRevokingInviteLink] = useState(false);
   const inviteModalTranslateY = useRef(new Animated.Value(360)).current;
   const groupBalance = details ? calculateGroupBalance(details.bills, details.currentUserId) : 0;
   const balanceBills = details
@@ -201,6 +207,43 @@ export default function GroupDetailScreen({
     ]);
   };
 
+  const handleShareInviteLink = async () => {
+    setIsSharingInviteLink(true);
+    try {
+      const inviteLink = await getOrCreateGroupInviteLink(groupId);
+      const url = `${supabaseUrl}/functions/v1/open-group-invite?token=${encodeURIComponent(inviteLink.token)}`;
+      await Share.share({ message: t.shareInviteMessage(details.group.name, url), url });
+      setDetails((currentDetails) => ({ ...currentDetails, inviteLink }));
+    } catch (error) {
+      console.error('Failed to share group invite link:', error);
+      Alert.alert(t.inviteLinkErrorTitle, t.inviteLinkError);
+    } finally {
+      setIsSharingInviteLink(false);
+    }
+  };
+
+  const handleRevokeInviteLink = () => {
+    Alert.alert(t.revokeInviteLinkTitle, t.revokeInviteLinkMessage, [
+      { style: 'cancel', text: t.cancel },
+      {
+        style: 'destructive',
+        text: t.revokeInviteLink,
+        onPress: async () => {
+          setIsRevokingInviteLink(true);
+          try {
+            await revokeGroupInviteLink(details.inviteLink.id);
+            setDetails((currentDetails) => ({ ...currentDetails, inviteLink: null }));
+          } catch (error) {
+            console.error('Failed to revoke group invite link:', error);
+            Alert.alert(t.revokeInviteLinkErrorTitle, t.revokeInviteLinkError);
+          } finally {
+            setIsRevokingInviteLink(false);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-brand-background">
       <StatusBar style="dark" />
@@ -265,13 +308,47 @@ export default function GroupDetailScreen({
                 <Text className="text-base font-extrabold text-[#F3F78D]">{t.createBill}</Text>
               </Pressable>
               {details?.isAdmin && (
-                <Pressable
-                  accessibilityLabel={t.inviteMember}
-                  className="mt-6 h-[54px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
-                  onPress={() => setIsInviteOpen(true)}
-                >
-                  <Text className="text-base font-extrabold text-[#F3F78D]">{t.inviteMember}</Text>
-                </Pressable>
+                <>
+                  <Pressable
+                    accessibilityLabel={t.inviteMember}
+                    className="mt-6 h-[54px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
+                    onPress={() => setIsInviteOpen(true)}
+                  >
+                    <Text className="text-base font-extrabold text-[#F3F78D]">
+                      {t.inviteMember}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel={t.shareInviteLink}
+                    className="mt-3 h-[54px] items-center justify-center rounded-2xl bg-[#E9EEEA] active:opacity-80"
+                    disabled={isSharingInviteLink || isRevokingInviteLink}
+                    onPress={handleShareInviteLink}
+                  >
+                    {isSharingInviteLink ? (
+                      <ActivityIndicator color="#31564B" />
+                    ) : (
+                      <Text className="text-base font-extrabold text-[#31564B]">
+                        {t.shareInviteLink}
+                      </Text>
+                    )}
+                  </Pressable>
+                  {details.inviteLink && (
+                    <Pressable
+                      accessibilityLabel={t.revokeInviteLink}
+                      className="mt-3 h-[48px] items-center justify-center rounded-2xl bg-[#FDE8E4] active:opacity-80"
+                      disabled={isSharingInviteLink || isRevokingInviteLink}
+                      onPress={handleRevokeInviteLink}
+                    >
+                      {isRevokingInviteLink ? (
+                        <ActivityIndicator color="#A83E32" />
+                      ) : (
+                        <Text className="text-sm font-extrabold text-[#A83E32]">
+                          {t.revokeInviteLink}
+                        </Text>
+                      )}
+                    </Pressable>
+                  )}
+                </>
               )}
               <Text className="mt-8 text-[11px] font-extrabold tracking-[1.4px] text-[#6C817A]">
                 {t.groupBills}

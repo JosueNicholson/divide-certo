@@ -40,6 +40,19 @@ redireciona ao deep link do aplicativo; o aceite em si continua protegido pela
 sessão autenticada e pelo e-mail do convite na função SQL do Supabase. O Supabase fornece
 automaticamente `SUPABASE_URL` e `SUPABASE_ANON_KEY` no ambiente da função.
 
+## Links compartilháveis de grupo
+
+Administradores podem gerar um link de convite compartilhável diretamente na tela
+do grupo. Cada link vale por 7 dias e pode ser revogado pelo administrador. A
+pessoa que abrir o link precisa entrar no aplicativo antes de revisar e aceitar o
+convite; assim, a entrada no grupo continua associada a uma conta autenticada.
+
+Depois de aplicar a migração de links, publique novamente a função de redirecionamento:
+
+```bash
+supabase functions deploy open-group-invite --no-verify-jwt
+```
+
 O login Google em iOS e Android exige um build de desenvolvimento ou de
 produção, pois ele precisa registrar o esquema `dividecerto` no sistema. O
 Expo Go não registra esse esquema.
