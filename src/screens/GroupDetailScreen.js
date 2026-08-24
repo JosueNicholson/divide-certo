@@ -1,8 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -47,6 +48,7 @@ export default function GroupDetailScreen({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [pendingInviteAction, setPendingInviteAction] = useState(null);
   const [isBalanceDetailsOpen, setIsBalanceDetailsOpen] = useState(false);
+  const inviteModalTranslateY = useRef(new Animated.Value(360)).current;
   const groupBalance = details ? calculateGroupBalance(details.bills, details.currentUserId) : 0;
   const balanceBills = details
     ? details.bills
@@ -115,6 +117,17 @@ export default function GroupDetailScreen({
   useEffect(() => {
     loadDetails();
   }, [loadDetails]);
+
+  useEffect(() => {
+    if (!isInviteOpen) return;
+
+    inviteModalTranslateY.setValue(360);
+    Animated.timing(inviteModalTranslateY, {
+      duration: 220,
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
+  }, [inviteModalTranslateY, isInviteOpen]);
 
   const closeInviteModal = () => {
     if (isCreatingInvite) return;
@@ -366,7 +379,7 @@ export default function GroupDetailScreen({
         />
       )}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent
         visible={isInviteOpen}
         onRequestClose={closeInviteModal}
@@ -379,46 +392,48 @@ export default function GroupDetailScreen({
             contentContainerClassName="flex-grow justify-end px-4 pb-4"
             keyboardShouldPersistTaps="handled"
           >
-            <View className="rounded-[28px] bg-white px-6 pb-6 pt-5">
-              <View className="flex-row items-center">
-                <Text className="flex-1 text-[22px] font-extrabold text-[#1E3D35]">
-                  {t.inviteMember}
+            <Animated.View style={{ transform: [{ translateY: inviteModalTranslateY }] }}>
+              <View className="rounded-[28px] bg-white px-6 pb-6 pt-5">
+                <View className="flex-row items-center">
+                  <Text className="flex-1 text-[22px] font-extrabold text-[#1E3D35]">
+                    {t.inviteMember}
+                  </Text>
+                  <Pressable
+                    accessibilityLabel={t.close}
+                    className="h-10 w-10 items-center justify-center rounded-full bg-[#E9EEEA]"
+                    onPress={closeInviteModal}
+                  >
+                    <Text className="text-[25px] leading-7 text-[#1E3D35]">×</Text>
+                  </Pressable>
+                </View>
+                <Text className="mt-3 text-sm leading-5 text-[#71807A]">
+                  {t.inviteMemberDescription}
                 </Text>
+                <TextInput
+                  accessibilityLabel={t.inviteEmail}
+                  autoCapitalize="none"
+                  autoFocus
+                  keyboardType="email-address"
+                  onChangeText={setInviteEmail}
+                  placeholder={t.inviteEmailPlaceholder}
+                  placeholderTextColor="#7A8983"
+                  value={inviteEmail}
+                  className="mt-6 h-[58px] rounded-2xl bg-[#F1F4F0] px-4 text-base font-semibold text-[#1E3D35]"
+                />
                 <Pressable
-                  accessibilityLabel={t.close}
-                  className="h-10 w-10 items-center justify-center rounded-full bg-[#E9EEEA]"
-                  onPress={closeInviteModal}
+                  accessibilityLabel={t.sendInvite}
+                  className="mt-4 h-[58px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
+                  disabled={isCreatingInvite}
+                  onPress={handleCreateInvite}
                 >
-                  <Text className="text-[25px] leading-7 text-[#1E3D35]">×</Text>
+                  {isCreatingInvite ? (
+                    <ActivityIndicator color="#F3F78D" />
+                  ) : (
+                    <Text className="text-base font-extrabold text-[#F3F78D]">{t.sendInvite}</Text>
+                  )}
                 </Pressable>
               </View>
-              <Text className="mt-3 text-sm leading-5 text-[#71807A]">
-                {t.inviteMemberDescription}
-              </Text>
-              <TextInput
-                accessibilityLabel={t.inviteEmail}
-                autoCapitalize="none"
-                autoFocus
-                keyboardType="email-address"
-                onChangeText={setInviteEmail}
-                placeholder={t.inviteEmailPlaceholder}
-                placeholderTextColor="#7A8983"
-                value={inviteEmail}
-                className="mt-6 h-[58px] rounded-2xl bg-[#F1F4F0] px-4 text-base font-semibold text-[#1E3D35]"
-              />
-              <Pressable
-                accessibilityLabel={t.sendInvite}
-                className="mt-4 h-[58px] items-center justify-center rounded-2xl bg-[#1E3D35] active:bg-[#31564B]"
-                disabled={isCreatingInvite}
-                onPress={handleCreateInvite}
-              >
-                {isCreatingInvite ? (
-                  <ActivityIndicator color="#F3F78D" />
-                ) : (
-                  <Text className="text-base font-extrabold text-[#F3F78D]">{t.sendInvite}</Text>
-                )}
-              </Pressable>
-            </View>
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
