@@ -1,0 +1,31 @@
+name: Solicitação de funcionalidade
+description: Sugira uma melhoria ou uma nova capacidade para o aplicativo.
+title: 'feat: '
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade
+      description: Que situação esta funcionalidade resolveria?
+      placeholder: Como pessoa usuária, eu preciso...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+      description: Descreva a funcionalidade e como ela deveria funcionar.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Há algum contorno ou outra solução possível?
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Inclua referências, esboços ou exemplos, se houver.

@@ -1,0 +1,48 @@
+name: Relato de bug
+description: Informe um problema reproduzível no aplicativo.
+title: 'bug: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por relatar o problema. Inclua informações suficientes para conseguirmos reproduzi-lo.
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do problema
+      description: Explique o que aconteceu e qual era o comportamento esperado.
+      placeholder: Ao..., aconteceu...; eu esperava...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Como reproduzir
+      description: Liste os passos mínimos para reproduzir o comportamento.
+      placeholder: |
+        1. Abra...
+        2. Toque em...
+        3. Observe...
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: Versão do aplicativo
+      placeholder: 'Ex.: 1.0.0'
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Plataforma
+      options:
+        - Android
+        - iOS
+        - Ambas
+        - Outra
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências adicionais
+      description: Adicione capturas de tela, logs ou qualquer outro contexto relevante.

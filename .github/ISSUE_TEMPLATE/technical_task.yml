@@ -1,0 +1,35 @@
+name: Tarefa técnica
+description: Registre manutenção, refatoração, dívida técnica ou trabalho interno.
+title: 'chore: '
+labels:
+  - technical-debt
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: Qual resultado técnico é esperado?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Escopo
+      description: Liste os sistemas, telas, arquivos ou fluxos envolvidos.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Critérios de aceite
+      description: Descreva como saberemos que a tarefa foi concluída.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Observações
+      description: Registre riscos, dependências ou decisões técnicas relevantes.
